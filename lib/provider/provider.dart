@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 class UserModel {
-  final String email , storeId , transacId , role;
-  UserModel({ required this.email, required this.storeId , required this.transacId , required this.role});
+  final String email , storeId , transacId , role ,name;
+  UserModel({ required this.email, required this.storeId , required this.transacId , required this.role , required this.name});
 }
 class UserProvider with ChangeNotifier {
   UserModel? _user;

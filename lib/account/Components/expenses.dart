@@ -18,7 +18,7 @@ class _ExpensesState extends State<Expenses> {
 
   _updateExpansesSate() async {
   final user = context.read<UserProvider>().user;
-    await db.collection('transactions').doc(user!.transacId).update({"other_expenses" : _expenses.text});
+    await db.collection('transactions').doc(user!.transacId).update({"other_expenses" : int.tryParse(_expenses.text) ?? 0});
     return true;
   }
 

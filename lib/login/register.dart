@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 // import 'package:inventoryapp/db/logindb.dart';
 import 'package:inventoryapp/db/my_project.dart';
 import 'package:inventoryapp/db/store.dart';
@@ -29,21 +30,52 @@ class _RegisterState extends State<Register> {
   }
 
   _register(String email, String password) async {
+    final queryCheckUser = await db
+          .collection('users')
+          .where('email', isEqualTo: _emailController.text)
+          .get();
+      if (queryCheckUser.docs.length > 0) {
+        return  showDialog<String>(
+          context: context,
+          builder: (BuildContext context) => AlertDialog(
+            title: const Text('มีชื่อผู้ใช้นี้แล้ว'),
+            content: const Text('กรุณาเลือกผู้ใช้ใหม่'),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () => Navigator.pop(context, 'OK'),
+                child: const Text('ตกลง'),
+              ),
+            ],
+          ),
+        );
+      }
     final store = <String, dynamic>{
       "store_name": email,
-      "store_code": _generateRandomString(4)
+      "store_code": _generateRandomString(8)
     };
     db.collection("stores").add(store).then((value) {
       final user = <String, dynamic>{
-        "name":email,
+        "name": "เจ้าของร้าน",
         "email": email,
         "password": password,
         "role": "เจ้าของร้าน",
         "store_id": value.id,
       };
+      _createTransactions(value.id);
       db.collection("users").add(user).then((DocumentReference doc) {
         print('DocumentSnapshot added with ID: ${doc.id}');
       });
+    });
+  }
+
+  _createTransactions(String storeId) async {
+    String formattedDate = DateFormat('dd/MM/yy').format(DateTime.now());
+    await db.collection('transactions').add({
+      'date': formattedDate,
+      'other_expenses': 0,
+      'profit': 0,
+      'sale': 0,
+      'store_id': storeId
     });
   }
 

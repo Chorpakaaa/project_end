@@ -20,6 +20,43 @@ class _ManageRole extends State<ManageRole> {
     _fecthUser();
   }
 
+  _dialogDelete(String idUser, String name) {
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('คุณแน่ใจหรือไม่ ต้องจะการจะลบชื่อผู้ใช้  ' + name + ''),
+          content: const Text('คลิกตกลงเพื่อลบผู้ใช้งาน'),
+          actions: <Widget>[
+            TextButton(
+              style: TextButton.styleFrom(
+                textStyle: Theme.of(context).textTheme.labelLarge,
+              ),
+              child: const Text('ยกเลิก'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              style: TextButton.styleFrom(
+                textStyle: Theme.of(context).textTheme.labelLarge,
+              ),
+              child: const Text('ตกลง'),
+              onPressed: () async {
+                await db.collection('users').doc(idUser).delete();
+                Navigator.pop(context);
+                Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                        builder: (BuildContext context) => super.widget));
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   _fecthUser() async {
     final user = context.read<UserProvider>().user;
     await db
@@ -28,14 +65,17 @@ class _ManageRole extends State<ManageRole> {
         .get()
         .then((value) {
       for (final data in value.docs) {
-        final dataUser = <String , dynamic>{
-          "name":data['name'],
-          "email":data["email"],
-          "role":data["role"]
+        final dataUser = <String, dynamic>{
+          "name": data['name'],
+          "email": data["email"],
+          "role": data["role"],
+          "user_id": data.id
         };
         setState(() {
           listUser.add(dataUser);
-          listUser = listUser.where((element) => element['role'] != "เจ้าของร้าน").toList();
+          listUser = listUser
+              .where((element) => element['role'] != "เจ้าของร้าน")
+              .toList();
         });
       }
     });
@@ -89,9 +129,20 @@ class _ManageRole extends State<ManageRole> {
                 ),
                 Column(
                     children: listUser
-                        .map((i) => Container(
-                              decoration: BoxDecoration(
-                                  border: Border.all(color: Colors.blueAccent)),
+                        .map((i) => InkWell(
+                            onLongPress: () {
+                              _dialogDelete(i['user_id'], i['name']);
+                            },
+                            child: Container(
+                              decoration: const BoxDecoration(
+                                border: Border(
+                                    bottom: BorderSide(
+                                      color: Colors.black,
+                                      width: 0.5,
+                                    ),
+                                    top: BorderSide(
+                                        color: Colors.black, width: 0.5)),
+                              ),
                               child: Padding(
                                 padding: const EdgeInsets.all(8.0),
                                 child: Row(
@@ -109,7 +160,7 @@ class _ManageRole extends State<ManageRole> {
                                   ],
                                 ),
                               ),
-                            ))
+                            )))
                         .toList())
               ],
             ),

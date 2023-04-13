@@ -24,13 +24,64 @@ class Imported extends StatefulWidget {
 class _MyWidgetState extends State<Imported> {
   late String storeId = "";
   final db = FirebaseFirestore.instance;
+  TextEditingController _searchController = TextEditingController();
+  List _searchResultList = [];
   List listDatas = [];
   List newData = [];
+  List checkQuantity = [];
   int newQuantity = 0;
   @override
   void initState() {
     super.initState();
     _getData();
+    _checkQuantity();
+  }
+
+  _checkQuantity() async {
+    final user = context.read<UserProvider>().user;
+    storeId = user != null ? user.storeId : '';
+    await db
+        .collection('products')
+        .where('store_id', isEqualTo: storeId)
+        .get()
+        .then((value) async {
+      for (final i in value.docs) {
+        List quantityValue = [];
+        await db
+            .collection('sub_products')
+            .where('product_id', isEqualTo: i.id)
+            .get()
+            .then((subData) {
+          for (final j in subData.docs) {
+            setState(() {
+              quantityValue.add(j['sub_product_quantity']);
+            });
+          }
+        });
+        setState(() {
+          checkQuantity.add({
+            "product_id": i.id,
+            "sub_quantity": [...quantityValue]
+          });
+        });
+      }
+    });
+    checkQuantity.forEach((value) {
+      value['sub_quantity'] =
+          value['sub_quantity'].reduce((numr, e) => numr + e);
+    });
+    if (listDatas.isNotEmpty) {
+      int i = 0;
+      listDatas.forEach((element) {
+        if (checkQuantity
+            .map((e) => e['product_id'])
+            .toList()
+            .contains(element['product_id'])) {
+          element['sale_out'] = checkQuantity[i]['sub_quantity'];
+        }
+        i++;
+      });
+    }
   }
 
   void _getData() async {
@@ -52,6 +103,7 @@ class _MyWidgetState extends State<Imported> {
           });
         });
       });
+      _search('');
       provider.addItem(listDatas);
     } else {
       _newDataCallback(item);
@@ -79,6 +131,7 @@ class _MyWidgetState extends State<Imported> {
       setState(() {
         listDatas = updatedData;
       });
+      _search('');
     } else {
       QuerySnapshot querySnapshot = await db
           .collection('products')
@@ -93,6 +146,7 @@ class _MyWidgetState extends State<Imported> {
           });
         });
       });
+      _search('');
       provider.addItem(listDatas);
     }
     List resultQuantity = [];
@@ -103,9 +157,10 @@ class _MyWidgetState extends State<Imported> {
             .toList();
       }
     });
-    newQuantity = resultQuantity.length > 0 ? resultQuantity.reduce((value, element) => value + element) : 0;
+    newQuantity = resultQuantity.length > 0
+        ? resultQuantity.reduce((value, element) => value + element)
+        : 0;
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -161,78 +216,26 @@ class _MyWidgetState extends State<Imported> {
                     },
                   );
                 }
-              }
-              ),
+              }),
         ],
       ),
       body: Center(
         child: Column(
           children: <Widget>[
-            const TextField(
-              decoration: InputDecoration(
+            TextField(
+              controller: _searchController,
+              onChanged: (value) => _search(value),
+              decoration: const InputDecoration(
                   filled: true,
                   fillColor: Colors.white,
                   hintText: " ค้นหา ",
                   prefixIcon: Icon(Icons.search),
                   prefixIconColor: Colors.deepOrange),
             ),
-            Container(
-              height: 40,
-              decoration: const BoxDecoration(
-                color: Colors.deepOrange,
-              ),
-              child: Row(
-                children: [
-                  const Padding(
-                    padding:
-                        EdgeInsets.only(left: 10, right: 0, top: 0, bottom: 0),
-                    child: Icon(
-                      Icons.folder_copy_outlined,
-                      color: Colors.white,
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 10),
-                    child: TextButton(
-                      onPressed: () => showDialog<String>(
-                        context: context,
-                        builder: (BuildContext context) => AlertDialog(
-                          title: const Text('หมวดหมู่สินค้า'),
-                          content: SizedBox(
-                            height: 70,
-                            child: Column(
-                              children: const [
-                                Text('หมวดหมู่สินค้าทั้งหมด(3)'),
-                                Text('หมวดหมู่DRESS(1)'),
-                                Text('หมวดหมู่Oversize(2)'),
-                              ],
-                            ),
-                          ),
-                          actions: <Widget>[
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, 'Cancel'),
-                              child: const Text('Cancel'),
-                            ),
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, 'OK'),
-                              child: const Text('OK'),
-                            ),
-                          ],
-                        ),
-                      ),
-                      child: const Text(
-                        'หมวดหมู่ทั้งหมด',
-                        style: TextStyle(color: Colors.white, fontSize: 16),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
             Expanded(
                 child: GridView.count(
                     crossAxisCount: 2,
-                    children: listDatas
+                    children: _searchResultList
                         .map(
                           (data) => InkWell(
                               onTap: () => {
@@ -263,30 +266,54 @@ class _MyWidgetState extends State<Imported> {
                                     borderRadius: const BorderRadius.all(
                                         Radius.circular(5.0)),
                                   ),
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                  child: Stack(
                                     children: [
-                                      Container(
-                                        margin: const EdgeInsets.only(
-                                            left: 10.0, bottom: 5.0, top: 5.0),
-                                        child: Text(
-                                          data['product_name'],
-                                          style: const TextStyle(
-                                              fontSize: 20,
-                                              fontWeight: FontWeight.w400),
-                                        ),
+                                      Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Container(
+                                            margin: const EdgeInsets.only(
+                                                left: 10.0,
+                                                bottom: 5.0,
+                                                top: 5.0),
+                                            child: Text(
+                                              data['product_name'],
+                                              style: const TextStyle(
+                                                  fontSize: 20,
+                                                  fontWeight: FontWeight.w400),
+                                            ),
+                                          ),
+                                          Center(
+                                              child: FittedBox(
+                                                  child: Image.network(
+                                            data['product_image'],
+                                            height: 90,
+                                            width: 90,
+                                            fit: BoxFit.fill,
+                                          )))
+                                        ],
                                       ),
-                                      Center(
-                                          child: FittedBox(
-                                              child: Image(
-                                        image:
-                                            AssetImage(data['product_image']),
-                                        height: 90,
-                                        width: 90,
-                                        fit: BoxFit.fill,
-                                      )))
+                                      if (data['sale_out'] != null)
+                                        data['sale_out'] < 1
+                                            ? Positioned.fill(
+                                                child: Center(
+                                                  child: Container(
+                                                    height: 30,
+                                                    width: 100,
+                                                    color: Colors.red,
+                                                    child: const Center(
+                                                        child: Text(
+                                                      'สินค้าหมด',
+                                                      style: TextStyle(
+                                                          color: Colors.white),
+                                                    )),
+                                                  ),
+                                                ),
+                                              )
+                                            : const SizedBox.shrink()
                                     ],
                                   ))),
                         )
@@ -321,7 +348,25 @@ class _MyWidgetState extends State<Imported> {
           child: const Icon(Icons.add),
         ),
       ]),
-      bottomNavigationBar: BottomNavbar(number: 0 , role: user!.role,),
+      bottomNavigationBar: BottomNavbar(
+        number: 0,
+        role: user!.role,
+      ),
     );
+  }
+
+  void _search(String query) {
+    List matches = [];
+    matches.addAll(listDatas);
+    if (query.isNotEmpty) {
+      matches.retainWhere((match) {
+        String productName = match['product_name'];
+        return productName.toLowerCase().contains(query.toLowerCase());
+      });
+    }
+    setState(() {
+      _searchResultList.clear();
+      _searchResultList.addAll(matches);
+    });
   }
 }

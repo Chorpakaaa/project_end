@@ -1,3 +1,6 @@
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -8,7 +11,12 @@ import 'package:inventoryapp/account/Components/productdetails.dart';
 import 'package:inventoryapp/account/Components/saleproduct.dart';
 import 'package:inventoryapp/provider/provider.dart';
 import 'package:inventoryapp/widget/nevbar.dart';
+import 'package:open_file/open_file.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
 
 class Auditday extends StatefulWidget {
   const Auditday({super.key});
@@ -24,8 +32,8 @@ class AuditdayState extends State<Auditday> {
   String formattedDate = DateFormat('dd/MM/yy').format(DateTime.now());
   double totalSale = 0;
   double totalBuy = 0;
-  double otherExpenses = 0;
   double totalProfit = 0;
+  int otherExpenses = 0;
   int lengthSale = 0;
   List arr = [];
   @override
@@ -36,12 +44,12 @@ class AuditdayState extends State<Auditday> {
 
   _queryTransactions(String date) async {
     List listOrder = [];
-     final user = context.read<UserProvider>().user;
-    // String formattedDate = DateFormat('dd/MM/yy').format(DateTime.now());
+    final user = context.read<UserProvider>().user;
 
     final fetchTransac = await db
         .collection('transactions')
         .where('date', isEqualTo: date)
+        .where('store_id', isEqualTo: user!.storeId)
         .get();
     for (final data in fetchTransac.docs) {
       await db
@@ -53,7 +61,7 @@ class AuditdayState extends State<Auditday> {
           final addData = <String, dynamic>{
             "date_time": orderData['date_time'],
             "order_number": orderData['order_number'],
-            "role": orderData['role'],
+            "name": orderData['name'],
             "status": orderData['status'],
             "total": orderData['total'],
             "total_quantity": orderData['total_quantity'],
@@ -73,6 +81,7 @@ class AuditdayState extends State<Auditday> {
       };
       setState(() {
         arr.add(setData);
+        otherExpenses = data['other_expenses'];
       });
     }
     List sumSale = [];
@@ -100,13 +109,17 @@ class AuditdayState extends State<Auditday> {
           ? sumSale.reduce((value, element) => value + element)
           : 0;
       totalProfit = totalSale - totalBuy;
+      totalProfit -= otherExpenses;
     });
 
-    await db.collection('transactions').doc(user!.transacId).update({"profit" : totalProfit});
-
+    await db
+        .collection('transactions')
+        .doc(user!.transacId)
+        .update({"profit": totalProfit});
   }
 
   void _selectDate(BuildContext context) async {
+    final user = context.read<UserProvider>().user;
     List listOrder = [];
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -123,6 +136,7 @@ class AuditdayState extends State<Auditday> {
     final fetchTransac = await db
         .collection('transactions')
         .where('date', isEqualTo: formatted)
+        .where('store_id', isEqualTo: user!.storeId)
         .get();
     if (fetchTransac.docs.isNotEmpty) {
       for (final data in fetchTransac.docs) {
@@ -135,7 +149,7 @@ class AuditdayState extends State<Auditday> {
             final addData = <String, dynamic>{
               "date_time": orderData['date_time'],
               "order_number": orderData['order_number'],
-              "role": orderData['role'],
+              "name": orderData['name'],
               "status": orderData['status'],
               "total": orderData['total'],
               "total_quantity": orderData['total_quantity'],
@@ -155,6 +169,7 @@ class AuditdayState extends State<Auditday> {
         };
         setState(() {
           arr = [setData];
+          otherExpenses = data['other_expenses'];
         });
       }
       List sumSale = [];
@@ -181,6 +196,7 @@ class AuditdayState extends State<Auditday> {
             ? sumSale.reduce((value, element) => value + element)
             : 0;
         totalProfit = totalSale - totalBuy;
+        totalProfit -= otherExpenses;
       });
     } else {
       setState(() {
@@ -194,7 +210,7 @@ class AuditdayState extends State<Auditday> {
   }
 
   Widget build(BuildContext context) {
-        final user = context.read<UserProvider>().user;
+    final user = context.read<UserProvider>().user;
     return DefaultTabController(
       length: 2,
       child: Scaffold(
@@ -343,7 +359,9 @@ class AuditdayState extends State<Auditday> {
                                                           color: Colors.black),
                                                       //backgroundColor: Colors.white,
                                                     ),
-                                                    onPressed: () {},
+                                                    onPressed: () {
+                                                      _generatePdfIn(i);
+                                                    },
                                                     child: const Text(
                                                         'Export PDF'), //ไฟล์ pdf
                                                   ),
@@ -529,15 +547,16 @@ class AuditdayState extends State<Auditday> {
                                                           const EdgeInsets.all(
                                                               5),
                                                       child: Row(
-                                                        children:  <
-                                                            Widget>[
-                                                         const Text(
+                                                        children: <Widget>[
+                                                          const Text(
                                                               'ค่าใช้จ่ายอื่นๆ',
                                                               style: TextStyle(
                                                                   fontSize:
                                                                       14)),
                                                           Spacer(),
-                                                          Text(i['other_expenses'].toString(),
+                                                          Text(
+                                                              i['other_expenses']
+                                                                  .toString(),
                                                               style: TextStyle(
                                                                   fontSize:
                                                                       14)),
@@ -587,52 +606,6 @@ class AuditdayState extends State<Auditday> {
                           const SizedBox(
                             height: 60,
                           ),
-                          // Container(
-                          //   margin: const EdgeInsets.only(
-                          //       top: 20, left: 5, right: 5),
-                          //   decoration: BoxDecoration(
-                          //       borderRadius: BorderRadius.circular(15),
-                          //       border: Border.all(color: Colors.grey)),
-                          //   child: Column(
-                          //     mainAxisSize: MainAxisSize.min,
-                          //     children: [
-                          //       Padding(
-                          //         padding: const EdgeInsets.all(5),
-                          //         child: Row(
-                          //           children: const <Widget>[
-                          //             Text('31/03/2022',
-                          //                 style: TextStyle(fontSize: 16)),
-                          //             Spacer(),
-                          //             Text('(รายการขาย 0 รายการ)',
-                          //                 style: TextStyle(fontSize: 16)),
-                          //           ],
-                          //         ),
-                          //       ),
-                          //       const Divider(
-                          //         thickness: 1,
-                          //         color: Colors.grey,
-                          //       ),
-                          //       Padding(
-                          //         padding:
-                          //             const EdgeInsets.fromLTRB(110, 0, 0, 0),
-                          //         child: Column(
-                          //           mainAxisSize: MainAxisSize.min,
-                          //           children: [
-                          //             Padding(
-                          //               padding: const EdgeInsets.all(30),
-                          //               child: Row(
-                          //                 children: const <Widget>[
-                          //                   Text('ไม่มีข้อมูล',
-                          //                       style: TextStyle(fontSize: 17)),
-                          //                 ],
-                          //               ),
-                          //             ),
-                          //           ],
-                          //         ),
-                          //       ),
-                          //     ],
-                          //   ),
-                          // )
                         ],
                       )
                     : Auditmonth()
@@ -652,8 +625,127 @@ class AuditdayState extends State<Auditday> {
           bottomNavigationBar: BottomNavbar(
             number: 2,
             role: user!.role,
-          )
-          ),
+          )),
     );
+  }
+
+  _generatePdfIn(Map<String, dynamic> data) async {
+    print(data);
+    final pdf = pw.Document();
+    String formattedDateTime =
+        DateFormat('dd/MM/yyyy HH:mm').format(DateTime.now());
+    String formattedDate = DateFormat('dd/MM/yy').format(DateTime.now());
+    final font = await PdfGoogleFonts.k2DThin();
+    pdf.addPage(pw.Page(
+      pageFormat: PdfPageFormat.a4,
+      build: (context) {
+        return pw.Column(children: [
+          pw.Align(
+              alignment: pw.Alignment.centerRight,
+              child: pw.Text('Export Date ' + formattedDateTime)),
+          pw.Align(
+              alignment: pw.Alignment.center,
+              child: pw.Text('รายรับรายจ่าย วันที่ ' + formattedDate,
+                  style: pw.TextStyle(font: font, fontSize: 18))),
+          pw.Table(children: [
+            pw.TableRow(children: [
+              pw.SizedBox(
+                  width: 150,
+                  child: pw.Text('รายการซื้อขาย',
+                      style: pw.TextStyle(font: font, fontSize: 18))),
+              pw.SizedBox(
+                  width: 50,
+                  child: pw.Text('',
+                      style: pw.TextStyle(font: font, fontSize: 18))),
+              pw.Container(
+                  child: pw.Text('รายรับ',
+                      style: pw.TextStyle(font: font, fontSize: 18))),
+              pw.Container(
+                  child: pw.Text('รายจ่าย',
+                      style: pw.TextStyle(font: font, fontSize: 18)))
+            ]),
+            for (final subData in data['order'])
+              pw.TableRow(children: [
+                pw.SizedBox(
+                    width: 150,
+                    child: pw.Text(
+                        subData['date_time'] + ' ' + subData['status'],
+                        style: pw.TextStyle(font: font, fontSize: 12))),
+                pw.SizedBox(
+                    width: 50,
+                    child: pw.Text('',
+                        style: pw.TextStyle(font: font, fontSize: 18))),
+                pw.Container(
+                    child: pw.Text(
+                        subData['status'] == "ขาย"
+                            ? subData['total'].toString()
+                            : ' ',
+                        style: pw.TextStyle(font: font, fontSize: 12))),
+                pw.Container(
+                    child: pw.Text(
+                        subData['status'] == "ซื้อ"
+                            ? subData['total'].toString()
+                            : ' ',
+                        style: pw.TextStyle(font: font, fontSize: 12))),
+              ]),
+            pw.TableRow(children: [
+              pw.Row(children: [
+                pw.SizedBox(width: 100, height: 40),
+              ]),
+              pw.Padding(
+                  padding: pw.EdgeInsets.only(top: 10, bottom: 10),
+                  child: pw.Container(
+                      child: pw.Text('ยอดรวม',
+                          style: pw.TextStyle(font: font, fontSize: 12)))),
+              pw.Padding(
+                  padding: pw.EdgeInsets.only(top: 10, bottom: 10),
+                  child: pw.Container(
+                      child: pw.Text(totalSale.toString(),
+                          style: pw.TextStyle(font: font, fontSize: 12)))),
+              pw.Padding(
+                  padding: pw.EdgeInsets.only(top: 10, bottom: 10),
+                  child: pw.Container(
+                      child: pw.Text(totalBuy.toString(),
+                          style: pw.TextStyle(font: font, fontSize: 12)))),
+            ]),
+            pw.TableRow(children: [
+              pw.Row(children: [
+                pw.SizedBox(width: 100, height: 20),
+              ]),
+              pw.Container(
+                  child: pw.Text('ค่าใช้จ่ายอื่นๆ',
+                      style: pw.TextStyle(font: font, fontSize: 12))),
+              pw.Container(
+                  child: pw.Text(data['other_expenses'].toString(),
+                      style: pw.TextStyle(font: font, fontSize: 12))),
+              pw.Container(
+                  child: pw.Text('',
+                      style: pw.TextStyle(font: font, fontSize: 12)))
+            ]),
+            pw.TableRow(children: [
+              pw.Row(children: [
+                pw.SizedBox(
+                  width: 100,
+                ),
+              ]),
+              pw.Container(
+                  child: pw.Text('กำไรสุทธิ',
+                      style: pw.TextStyle(font: font, fontSize: 12))),
+              pw.Container(
+                  child: pw.Text(totalProfit.toString(),
+                      style: pw.TextStyle(font: font, fontSize: 12))),
+              pw.Container(
+                  child: pw.Text('',
+                      style: pw.TextStyle(font: font, fontSize: 12)))
+            ]),
+          ])
+        ]);
+      },
+    ));
+    final appDocDir = await getApplicationDocumentsDirectory();
+    final appDocPath = appDocDir.path;
+    final file = File('$appDocPath/transaction.pdf');
+    await file.writeAsBytes(await pdf.save(), flush: true);
+    await OpenFile.open(file.path);
   }
 }

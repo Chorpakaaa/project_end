@@ -38,10 +38,12 @@ class _Other extends State<Other> {
   void _clearData() {
     final provider = Provider.of<ItemProvider>(context, listen: false);
     final providerSell = Provider.of<SellProvider>(context, listen: false);
+    final setIndex = Provider.of<IndexNavbar>(context, listen: false);
+
     provider.clearItem();
     providerSell.clearItem();
+    setIndex.addIndex(0);
   }
-
   @override
   Widget build(BuildContext context) {
     final user = context.read<UserProvider>().user;
@@ -74,55 +76,60 @@ class _Other extends State<Other> {
               SizedBox(
                 height: 20,
               ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.deepOrange,
-                  minimumSize: const Size.fromHeight(50),
-                ),
-                onPressed: () => {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => Shopsettings(),
-                      )),
-                },
-                child: Row(
-                  children: const <Widget>[
-                    Text(
-                      'ตั้งค่ารายละเอียดร้านค้า',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ],
-                ),
-              ),
-
-              Divider(
-                thickness: 2,
-              ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.deepOrange,
-                  minimumSize: const Size.fromHeight(50),
-                ),
-                onPressed: () => {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ManageRole(),
-                      )),
-                },
-                child: Row(
-                  children: const <Widget>[
-                    Text(
-                      'จัดการบทบาทและผู้ช่วย/ผู้ใช้อื่น',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ],
-                ),
-              ),
-              Divider(
-                thickness: 2,
-              ),
+              user!.role == "เจ้าของร้าน"
+                  ? Column(
+                      children: [
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.deepOrange,
+                            minimumSize: const Size.fromHeight(50),
+                          ),
+                          onPressed: () => {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => Shopsettings(),
+                                )),
+                          },
+                          child: Row(
+                            children: const <Widget>[
+                              Text(
+                                'ตั้งค่ารายละเอียดร้านค้า',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Divider(
+                          thickness: 2,
+                        ),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.deepOrange,
+                            minimumSize: const Size.fromHeight(50),
+                          ),
+                          onPressed: () => {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ManageRole(),
+                                )),
+                          },
+                          child: Row(
+                            children: const <Widget>[
+                              Text(
+                                'จัดการบทบาทและผู้ช่วย/ผู้ใช้อื่น',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Divider(
+                          thickness: 2,
+                        ),
+                      ],
+                    )
+                  : const SizedBox.shrink(),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.deepOrange,
@@ -141,11 +148,11 @@ class _Other extends State<Other> {
                         TextButton(
                           onPressed: () => {
                             _clearData(),
-                            Navigator.push(
+                            Navigator.pushAndRemoveUntil(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => LoginSreen(),
-                                ))
+                                    builder: (context) => LoginSreen()),
+                                (route) => false),
                           },
                           child: const Text('ตกลง'),
                         ),
@@ -168,7 +175,6 @@ class _Other extends State<Other> {
         bottomNavigationBar: BottomNavbar(
           number: 3,
           role: user!.role,
-        )
-        );
+        ));
   }
 }

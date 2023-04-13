@@ -9,24 +9,25 @@ import 'package:inventoryapp/widget/nevbar.dart';
 import 'package:provider/provider.dart';
 
 class Export extends StatefulWidget {
-final List? dataOrdering;
+  final List? dataOrdering;
   const Export({Key? key, this.dataOrdering}) : super(key: key);
   @override
   State<Export> createState() => _ExportState();
 }
-   String generateRandomNumber() {
-    Random random = Random();
-    int randomNumber = random.nextInt(900000) +
-        100000; // Generates a random number between 100000 and 999999
-    return randomNumber.toString();
-  }
+
+String generateRandomNumber() {
+  Random random = Random();
+  int randomNumber = random.nextInt(900000) +
+      100000; // Generates a random number between 100000 and 999999
+  return randomNumber.toString();
+}
 
 class _ExportState extends State<Export> {
   List arr = [];
   int allQuantity = 0;
   final db = FirebaseFirestore.instance;
-  double allProduct_price = 0;
-  String genNumber = '0000'+generateRandomNumber();
+  num allProduct_price = 0;
+  String genNumber = '0000' + generateRandomNumber();
   @override
   void initState() {
     super.initState();
@@ -51,7 +52,7 @@ class _ExportState extends State<Export> {
     allProduct_price = newPrice.reduce((value, element) => value + element);
   }
 
- Future<bool> _sendData() async {
+  Future<bool> _sendData() async {
     final provider = Provider.of<SellProvider>(context, listen: false);
     for (final i in arr) {
       for (final j in i['new_subproduct']) {
@@ -63,14 +64,14 @@ class _ExportState extends State<Export> {
             onError: (e) => print("Error updating document $e"));
       }
     }
-  
+
     final user = context.read<UserProvider>().user;
 
     final orderSend = <String, dynamic>{
       "status": "ขาย",
       "date_time": formattedDate,
       "order_number": genNumber,
-      "role": user!.role,
+      "name": user!.name,
       "total": allProduct_price,
       'total_quantity': allQuantity,
       'transac_id': user.transacId,
@@ -82,31 +83,36 @@ class _ExportState extends State<Export> {
           "item_name": data['product_name'],
           "order_id": value.id
         };
-        await db.collection('order_item').add(addOrderItem).then((orderItem) async {
+        await db
+            .collection('order_item')
+            .add(addOrderItem)
+            .then((orderItem) async {
           for (final subData in data['new_subproduct']) {
-            final addSubItem = <String , dynamic>{
-              "order_item_id":orderItem.id,
-              "sub_item_price":subData['sub_product_price'],
-              "sub_item_cost":0,
-              "sub_item_name":subData['sub_product_name'],
-              "sub_item_quantity":subData['new_quantity']
+            final addSubItem = <String, dynamic>{
+              "order_item_id": orderItem.id,
+              "sub_item_price": subData['sub_product_price'],
+              "sub_item_cost": 0,
+              "sub_item_name": subData['sub_product_name'],
+              "sub_item_quantity": subData['new_quantity']
             };
-            await db.collection('sub_item').add(addSubItem).then((_) => print('succes'));
+            await db
+                .collection('sub_item')
+                .add(addSubItem)
+                .then((_) => print('succes'));
           }
         });
       }
     });
 
-
-
     provider.clearItem();
     return true;
   }
+
   String formattedDate = DateFormat('dd/MM/yyyy HH:mm').format(DateTime.now());
 
   @override
   Widget build(BuildContext context) {
-     final user = context.read<UserProvider>().user;
+    final user = context.read<UserProvider>().user;
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
@@ -118,7 +124,7 @@ class _ExportState extends State<Export> {
                 size: 25,
               ),
               onPressed: () async {
-              if (await _sendData()) {
+                if (await _sendData()) {
                   showDialog<void>(
                     context: context,
                     builder: (BuildContext context) {
@@ -134,7 +140,8 @@ class _ExportState extends State<Export> {
                             onPressed: () {
                               Navigator.push(
                                 context,
-                                MaterialPageRoute(builder: (context) => const Sell()),
+                                MaterialPageRoute(
+                                    builder: (context) => const Sell()),
                               );
                             },
                           ),
@@ -180,11 +187,12 @@ class _ExportState extends State<Export> {
                             children: [
                               Column(
                                 children: [
-                                  Image(
-                                    image: AssetImage(i['product_image']),
-                                    width: 100,
+                                  FittedBox(
+                                      child: Image.network(
+                                    i['product_image'],
                                     height: 100,
-                                  )
+                                    width: 100,
+                                  ))
                                 ],
                               ),
                               const SizedBox(
@@ -228,7 +236,7 @@ class _ExportState extends State<Export> {
                         ),
                       )
                       .toList()),
-                       Container(
+              Container(
                 padding: const EdgeInsets.all(10.0),
                 height: 50,
                 width: 400,
@@ -310,7 +318,6 @@ class _ExportState extends State<Export> {
           ),
         ),
       ),
-      bottomNavigationBar: BottomNavbar(number: 1 , role: user!.role,),
     );
   }
 }

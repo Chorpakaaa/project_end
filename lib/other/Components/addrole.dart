@@ -46,13 +46,33 @@ class _AddRole extends State<AddRole> {
   _addNewUser() async {
     final user = context.read<UserProvider>().user;
     try {
-      await db.collection('users').add({
-        "email": _textEmail.text,
-        "name": _textName.text,
-        "role": selectedValue ?? "ซื้อสินค้าเข้า",
-        "password": _password.text,
-        "store_id": user!.storeId
-      });
+      final queryCheckUser = await db
+          .collection('users')
+          .where('email', isEqualTo: _textEmail.text)
+          .get();
+      if (queryCheckUser.docs.length > 0) {
+        return  showDialog<String>(
+          context: context,
+          builder: (BuildContext context) => AlertDialog(
+            title: const Text('มีชื่อผู้ใช้นี้แล้ว'),
+            content: const Text('กรุณาเลือกผู้ใช้ใหม่'),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () => Navigator.pop(context, 'OK'),
+                child: const Text('ตกลง'),
+              ),
+            ],
+          ),
+        );
+      } else {
+        await db.collection('users').add({
+          "email": _textEmail.text,
+          "name": _textName.text,
+          "role": selectedValue ?? "ซื้อสินค้าเข้า",
+          "password": _password.text,
+          "store_id": user!.storeId
+        });
+      }
       return true;
     } catch (e) {
       print('err $e');
@@ -80,6 +100,7 @@ class _AddRole extends State<AddRole> {
                     _textEmail.text.isNotEmpty &&
                     _textName.text.isNotEmpty) {
                   if (await _addNewUser()) {
+                    Navigator.pop(context);
                     Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(

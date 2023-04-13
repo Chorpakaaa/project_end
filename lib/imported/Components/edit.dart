@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:inventoryapp/imported/Class/subproduct.dart';
@@ -8,6 +11,8 @@ import 'package:flutter/services.dart';
 import 'package:inventoryapp/db/my_project.dart';
 import 'package:inventoryapp/provider/provider.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:dio/dio.dart';
 
 class Edit extends StatefulWidget {
   final String? productId;
@@ -18,13 +23,18 @@ class Edit extends StatefulWidget {
 }
 
 class _Edit extends State<Edit> {
+  final picker = ImagePicker();
+  final dio = Dio();
+  XFile? image;
+  String images = "";
+  String? base64Image;
+  bool? checkImage = false;
   List listProducts = [
     {"index": 0, "name": '', "cost": 0, "price": 0, "quantity": 0}
   ];
   final db = FirebaseFirestore.instance;
   final _productNameController = TextEditingController();
   final _productDetailController = TextEditingController();
-  String image = '';
   String codeUpdate = '';
   List listDelete = [];
   _generateRandomString(int len) {
@@ -44,13 +54,26 @@ class _Edit extends State<Edit> {
     }
   }
 
+  _convertBase64() async {
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      final bytes = await File(pickedFile!.path).readAsBytesSync();
+      final fileType = pickedFile.path.split('.').last;
+      setState(() {
+        image = pickedFile;
+        base64Image = "data:image/$fileType;base64," + base64Encode(bytes);
+      });
+    }
+  }
+
+// https://adaptive-testing-api.vercel.app/image/img
   _updateQueryProduct(String productId) async {
     await db.collection('products').doc(productId).get().then((value) {
       _productNameController.text = value['product_name'];
       _productDetailController.text = value['product_detail'];
       setState(() {
         codeUpdate = value['product_code'];
-        image = value['product_image'];
+        images = value['product_image'];
       });
     });
     final quertSubproduct = await db
@@ -77,79 +100,120 @@ class _Edit extends State<Edit> {
 
   _updateChangeProduct() async {
     if (widget.productId != null) {
-      final dataProduct = <String, dynamic>{
-        "product_name": _productNameController.text,
-        "product_detail": _productDetailController.text,
-      };
-      await db.collection('products').doc(widget.productId).update(dataProduct);
-      for (final data in listProducts) {
-        if(data['sub_product_id'] != null){
-          final updateSubproduct = <String , dynamic>{
-            "sub_product_cost": data['cost'],
-            "sub_product_name": data['name'],
-            "sub_product_price": data['price'],
-            "sub_product_quantity" : data['quantity']
-          };
-        await db.collection('sub_products').doc(data['sub_product_id']).update(updateSubproduct);
-        }
-        if(data['sub_product_id'] == null){
-          final addSubproduct = <String , dynamic>{
-            "sub_product_cost": data['cost'],
-            "sub_product_name": data['name'],
-            "sub_product_price": data['price'],
-            "sub_product_quantity" : data['quantity'],
-            "product_id":widget.productId
-          };
+      _loading();
+      String image_url = "";
+      if(base64Image != null && image != null){
+      final response = await dio.post(
+          'https://adaptive-testing-api.vercel.app/image/img/android',
+          data: jsonEncode({"image": base64Image, "key": "hiwkao"}));
+          setState(() {
+            image_url = response.data['url'];
+          });
+      }
+        final dataProduct = <String, dynamic>{
+          "product_name": _productNameController.text,
+          "product_detail": _productDetailController.text,
+          "product_image": image_url == "" ? images : image_url
+        };
+        await db
+            .collection('products')
+            .doc(widget.productId)
+            .update(dataProduct);
+        for (final data in listProducts) {
+          if (data['sub_product_id'] != null) {
+            final updateSubproduct = <String, dynamic>{
+              "sub_product_cost": data['cost'],
+              "sub_product_name": data['name'],
+              "sub_product_price": data['price'],
+              "sub_product_quantity": data['quantity']
+            };
+            await db
+                .collection('sub_products')
+                .doc(data['sub_product_id'])
+                .update(updateSubproduct);
+          }
+          if (data['sub_product_id'] == null) {
+            final addSubproduct = <String, dynamic>{
+              "sub_product_cost": data['cost'],
+              "sub_product_name": data['name'],
+              "sub_product_price": data['price'],
+              "sub_product_quantity": data['quantity'],
+              "product_id": widget.productId
+            };
             await db.collection('sub_products').add(addSubproduct);
+          }
         }
-      }
-      if(listDelete.length > 0){
-        for(final data in listDelete){
-           await db.collection('sub_products').doc(data).delete();
+        if (listDelete.length > 0) {
+          for (final data in listDelete) {
+            await db.collection('sub_products').doc(data).delete();
+          }
         }
-      }
+      
+
       return true;
     }
     return false;
+  }
+
+  _loading() {
+    showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          content: Row(
+            children: <Widget>[
+              CircularProgressIndicator(),
+              SizedBox(width: 20),
+              Text("กำลังโหลด...")
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final user = context.read<UserProvider>().user;
     final storeId = user != null ? user.storeId : null;
-
     _createProducts(String name, String detail) async {
-      try {
-        final data = <String, dynamic>{
-          "product_name": name,
-          "product_image": "assets/images/s12.png",
-          "store_id": storeId,
-          "product_code": randomString,
-          "product_detail": detail
-        };
-        await db.collection('products').add(data).then((value) async {
-          for (final add_sub_data in listProducts) {
-            final create_sub = <String, dynamic>{
-              "product_id": value.id,
-              "sub_product_cost": add_sub_data['cost'],
-              "sub_product_name": add_sub_data['name'],
-              "sub_product_price": add_sub_data['price'],
-              "sub_product_quantity": add_sub_data['quantity']
-            };
-            await db
-                .collection('sub_products')
-                .add(create_sub)
-                .then((subValue) {
-              print(
-                  'this productId : ${value.id} this sub_productId : ${subValue.id}');
-            });
-          }
+      dio.options.headers["content-Type"] = 'application/json';
+      String noImage =
+          'https://res.cloudinary.com/dvkhkj7jo/image/upload/v1681409220/3674270-200_m6r8be.png';
+      _loading();
+      String image_url = '';
+      if (base64Image != null && image != null) {
+        final response = await dio.post(
+            'https://adaptive-testing-api.vercel.app/image/img/android',
+            data: jsonEncode({"image": base64Image, "key": "hiwkao"}));
+        setState(() {
+          image_url = response.data['url'];
         });
-        return true;
-      } catch (e) {
-        print('err : ${e}');
-        return false;
       }
+      final data = <String, dynamic>{
+        "product_name": name,
+        "product_image": image_url == "" ? noImage : image_url,
+        "store_id": storeId,
+        "product_code": randomString,
+        "product_detail": detail
+      };
+      await db.collection('products').add(data).then((value) async {
+        for (final add_sub_data in listProducts) {
+          final create_sub = <String, dynamic>{
+            "product_id": value.id,
+            "sub_product_cost": add_sub_data['cost'],
+            "sub_product_name": add_sub_data['name'],
+            "sub_product_price": add_sub_data['price'],
+            "sub_product_quantity": add_sub_data['quantity']
+          };
+          await db.collection('sub_products').add(create_sub).then((subValue) {
+            print(
+                'this productId : ${value.id} this sub_productId : ${subValue.id}');
+          });
+        }
+      });
+      return true;
     }
 
     return Scaffold(
@@ -159,21 +223,21 @@ class _Edit extends State<Edit> {
         actions: <Widget>[
           TextButton(
               onPressed: () async {
-                if(widget.productId != null){
-                  if(await _updateChangeProduct()){
-                     Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const Imported()),
-                  );
+                if (widget.productId != null) {
+                  if (await _updateChangeProduct()) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const Imported()),
+                    );
                   }
-                }else{
-                if (await _createProducts(_productNameController.text,
-                    _productDetailController.text)) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const Imported()),
-                  );
-                }
+                } else {
+                  if (await _createProducts(_productNameController.text,
+                      _productDetailController.text)) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const Imported()),
+                    );
+                  }
                 }
               },
               child: const Text(
@@ -187,14 +251,48 @@ class _Edit extends State<Edit> {
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+            if (images != "" && image == null)
+              Center(
+                  child: FittedBox(
+                      child: Image.network(
+                images.toString(),
+                height: 200,
+                width: 200,
+                fit: BoxFit.fill,
+              ))),
+            if (image != null)
+              Center(
+                child: Container(
+                  height: 200,
+                  width: 200,
+                  child: Image.file(File(image!.path)),
+                ),
+              ),
             Container(
                 alignment: Alignment.topCenter,
-                child: Image(
-                  image: AssetImage(
-                      image == '' ? 'assets/images/folder.png' : image),
-                  height: 200,
-                  width: 400,
-                )),
+                child: ElevatedButton(
+                  onPressed: () => {_convertBase64()},
+                  style: ButtonStyle(
+                    padding: MaterialStateProperty.all(
+                      const EdgeInsets.all(8.0),
+                    ),
+                  ),
+                  child: const Text(
+                    'เลือกรูปสินค้า',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14.0,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                )
+                // Image(
+                //   image: AssetImage(
+                //       image == '' ? 'assets/images/folder.png' : image),
+                //   height: 200,
+                //   width: 400,
+                // )
+                ),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [

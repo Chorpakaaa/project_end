@@ -27,7 +27,7 @@ class _OrderdetailState extends State<Orderdetail> {
         dataOrder = {
           "date_time": value['date_time'],
           "order_number": value['order_number'],
-          "role": value['role'],
+          "name": value['name'],
           "total": value['total'],
           "total_quantity": value['total_quantity']
         };
@@ -48,16 +48,14 @@ class _OrderdetailState extends State<Orderdetail> {
           });
         }
         setState(() {
-           arr.add({
+          arr.add({
             "item_image": dataOrderItem['item_image'],
             "item_name": dataOrderItem['item_name'],
-            "sub_product":[...subItem]
+            "sub_product": [...subItem]
           });
         });
       }
     });
-  print(arr);
-    // print(dataOrder);
   }
 
   @override
@@ -65,7 +63,7 @@ class _OrderdetailState extends State<Orderdetail> {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        title: const Text('รายละเอียดการออเดอร์'),
+        title: const Text('รายละเอียดออเดอร์'),
       ),
       body: SingleChildScrollView(
         child: Container(
@@ -80,8 +78,10 @@ class _OrderdetailState extends State<Orderdetail> {
                   children: <Widget>[
                     const Text("เวลาทำรายการ", style: TextStyle(fontSize: 18)),
                     Spacer(),
-                    Text(dataOrder['date_time'],
-                        style: TextStyle(fontSize: 18)), //ทำให้เป็นวันที่จริงๆ
+                    if (dataOrder['date_time'] != null)
+                      Text(dataOrder['date_time'],
+                          style:
+                              TextStyle(fontSize: 18)), //ทำให้เป็นวันที่จริงๆ
                   ],
                 ),
               ),
@@ -101,11 +101,12 @@ class _OrderdetailState extends State<Orderdetail> {
                             children: [
                               Column(
                                 children: [
-                                  Image(
-                                    image: AssetImage(i['item_image']),
-                                    width: 100,
+                                  FittedBox(
+                                      child: Image.network(
+                                    i['item_image'].toString(),
                                     height: 100,
-                                  )
+                                    width: 100,
+                                  )),
                                 ],
                               ),
                               const SizedBox(
@@ -126,9 +127,13 @@ class _OrderdetailState extends State<Orderdetail> {
                                               children: [
                                                 Container(
                                                     width: 80,
-                                                    child: Text(iSub[
-                                                        'sub_item_name'])),
-                                                Text((iSub['sub_item_cost'] == 0 ? iSub['sub_item_price'] : iSub['sub_item_cost'])
+                                                    child: Text(
+                                                        iSub['sub_item_name'])),
+                                                Text((iSub['sub_item_cost'] == 0
+                                                            ? iSub[
+                                                                'sub_item_price']
+                                                            : iSub[
+                                                                'sub_item_cost'])
                                                         .toString() +
                                                     ' x ' +
                                                     iSub['sub_item_quantity']
@@ -164,7 +169,7 @@ class _OrderdetailState extends State<Orderdetail> {
                   children: <Widget>[
                     const Text("เลขที่"),
                     const Spacer(),
-                    Text(dataOrder['order_number']),
+                    Text(dataOrder['order_number'] ?? ''),
                   ],
                 ),
               ),
@@ -183,7 +188,8 @@ class _OrderdetailState extends State<Orderdetail> {
                   children: <Widget>[
                     const Text("จำนวนสินค้ารวม"),
                     const Spacer(),
-                    Text(dataOrder['total_quantity'].toString()),
+                    if (dataOrder['total'] != null)
+                      Text(dataOrder['total_quantity'].toString()),
                   ],
                 ),
               ),
@@ -201,7 +207,8 @@ class _OrderdetailState extends State<Orderdetail> {
                   children: <Widget>[
                     const Text("ราคารวมทั้งสิ้น"),
                     const Spacer(),
-                    Text(dataOrder['total'].toString()),
+                    if (dataOrder['total'] != null)
+                      Text(dataOrder['total'].toString()),
                   ],
                 ),
               ),
@@ -219,7 +226,7 @@ class _OrderdetailState extends State<Orderdetail> {
                   children: <Widget>[
                     const Text("สร้างโดย"),
                     const Spacer(),
-                    Text(dataOrder['role']),
+                    Text(dataOrder['name'] ?? ''),
                   ],
                 ),
               ),

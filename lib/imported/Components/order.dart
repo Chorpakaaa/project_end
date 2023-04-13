@@ -85,12 +85,12 @@ class _OrderState extends State<OrderProduct> {
                     final dataCallback = <String, dynamic>{
                       "product_id": widget.productId,
                       "new_subproduct": checkNewQuantity.map((e) => ({
-                        'sub_product_id' : e['sub_product_id'],
-                        'new_quantity' : e['new_quantity'],
-                        'sub_product_name': e['sub_product_name'],
-                        'sub_product_cost': e['sub_product_cost'],
-                        'sub_product_quantity': e['sub_product_quantity']
-                      }))
+                            'sub_product_id': e['sub_product_id'],
+                            'new_quantity': e['new_quantity'],
+                            'sub_product_name': e['sub_product_name'],
+                            'sub_product_cost': e['sub_product_cost'],
+                            'sub_product_quantity': e['sub_product_quantity']
+                          }))
                     };
                     Navigator.push(
                       context,
@@ -122,13 +122,14 @@ class _OrderState extends State<OrderProduct> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Container(
-                      alignment: Alignment.topCenter,
-                      child: Image(
-                        image: AssetImage(prouduct['product_image']),
-                        height: 200,
-                        width: 200,
-                      )),
+                  Center(
+                      child: FittedBox(
+                          child: Image.network(
+                    prouduct['product_image'],
+                    height: 200,
+                    width: 200,
+                    fit: BoxFit.fill,
+                  ))),
                   Container(
                       alignment: Alignment.topCenter,
                       child: Row(
@@ -144,7 +145,8 @@ class _OrderState extends State<OrderProduct> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                          builder: (context) => Edit(productId : widget.productId)),
+                                          builder: (context) => Edit(
+                                              productId: widget.productId)),
                                     );
                                   }),
                               const Text('แก้ไขสินค้า')
@@ -250,10 +252,11 @@ class _OrderState extends State<OrderProduct> {
                                               text: sub_list[index]
                                                       ['sub_product_cost']
                                                   .toString()),
-                                                  onChanged: (value) {
-                                                    sub_list[index]
-                                                      ['sub_product_cost'] = double.parse(value);
-                                                  },
+                                          onChanged: (value) {
+                                            sub_list[index]
+                                                    ['sub_product_cost'] =
+                                                double.parse(value);
+                                          },
                                           style: const TextStyle(
                                               color: Color(0xFFbdc6cf)),
                                           decoration: const InputDecoration(

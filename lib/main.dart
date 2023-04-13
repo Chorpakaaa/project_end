@@ -3,6 +3,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:inventoryapp/login/login.dart';
+import 'package:inventoryapp/pdf/pdf_page.dart';
 import 'package:inventoryapp/sell/sell.dart';
 import './db/test.dart';
 import './login/login.dart';

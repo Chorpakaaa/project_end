@@ -17,17 +17,17 @@ class Odering extends StatefulWidget {
   State<Odering> createState() => _OderingState();
 }
 
-  String generateRandomNumber() {
-    Random random = Random();
-    int randomNumber = random.nextInt(900000) +
-        100000; 
-    return randomNumber.toString();
-  }
+String generateRandomNumber() {
+  Random random = Random();
+  int randomNumber = random.nextInt(900000) + 100000;
+  return randomNumber.toString();
+}
+
 class _OderingState extends State<Odering> {
   List arr = [];
   int allQuantity = 0;
   final db = FirebaseFirestore.instance;
-  double allProduct_cost = 0;
+  num allProduct_cost = 0;
 
   @override
   void initState() {
@@ -35,7 +35,7 @@ class _OderingState extends State<Odering> {
     _getData();
   }
 
-  String orderNumber =  '0000'+generateRandomNumber();
+  String orderNumber = '0000' + generateRandomNumber();
   _getData() {
     setState(() {
       arr = widget.dataOrdering!;
@@ -68,11 +68,12 @@ class _OderingState extends State<Odering> {
     }
     @override
     final user = context.read<UserProvider>().user;
+    print(user!.transacId);
     final orderSend = <String, dynamic>{
       "status": "ซื้อ",
       "date_time": formattedDate,
       "order_number": orderNumber,
-      "role": user!.role,
+      "name": user!.name,
       "total": allProduct_cost,
       'total_quantity': allQuantity,
       'transac_id': user.transacId,
@@ -84,16 +85,22 @@ class _OderingState extends State<Odering> {
           "item_name": data['product_name'],
           "order_id": value.id
         };
-        await db.collection('order_item').add(addOrderItem).then((orderItem) async {
+        await db
+            .collection('order_item')
+            .add(addOrderItem)
+            .then((orderItem) async {
           for (final subData in data['new_subproduct']) {
-            final addSubItem = <String , dynamic>{
-              "order_item_id":orderItem.id,
-              "sub_item_cost":subData['sub_product_cost'],
-              "sub_item_price":0,
-              "sub_item_name":subData['sub_product_name'],
-              "sub_item_quantity":subData['new_quantity']
+            final addSubItem = <String, dynamic>{
+              "order_item_id": orderItem.id,
+              "sub_item_cost": subData['sub_product_cost'],
+              "sub_item_price": 0,
+              "sub_item_name": subData['sub_product_name'],
+              "sub_item_quantity": subData['new_quantity']
             };
-            await db.collection('sub_item').add(addSubItem).then((_) => print('succes'));
+            await db
+                .collection('sub_item')
+                .add(addSubItem)
+                .then((_) => print('succes'));
           }
         });
       }
@@ -107,7 +114,7 @@ class _OderingState extends State<Odering> {
 
   @override
   Widget build(BuildContext context) {
-        final user = context.read<UserProvider>().user;
+    final user = context.read<UserProvider>().user;
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
@@ -182,11 +189,13 @@ class _OderingState extends State<Odering> {
                             children: [
                               Column(
                                 children: [
-                                  Image(
-                                    image: AssetImage(i['product_image']),
-                                    width: 100,
+                                  FittedBox(
+                                      child: Image.network(
+                                    i['product_image'],
                                     height: 100,
-                                  )
+                                    width: 100,
+                                    fit: BoxFit.fill,
+                                  ))
                                 ],
                               ),
                               const SizedBox(
@@ -312,7 +321,6 @@ class _OderingState extends State<Odering> {
           ),
         ),
       ),
-      bottomNavigationBar: BottomNavbar(number: 0 , role: user!.role,),
     );
   }
 }

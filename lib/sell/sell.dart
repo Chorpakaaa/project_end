@@ -9,7 +9,7 @@ import 'package:provider/provider.dart';
 import '../widget/nevbar.dart';
 
 class Sell extends StatefulWidget {
-   final Map<String, dynamic>? dataCallback;
+  final Map<String, dynamic>? dataCallback;
   const Sell({Key? key, this.dataCallback}) : super(key: key);
   // const Sell({super.key});
 
@@ -18,17 +18,67 @@ class Sell extends StatefulWidget {
 }
 
 class _MyWidgetState extends State<Sell> {
- late String storeId = "";
- late String role ="";
+  late String storeId = "";
+  late String role = "";
+  TextEditingController _searchController = TextEditingController();
+  List _searchResultList = [];
   final db = FirebaseFirestore.instance;
   List listDatas = [];
   List newData = [];
   int newQuantity = 0;
-
+  List checkQuantity = [];
   @override
   void initState() {
     super.initState();
     _getData();
+    _checkQuantity();
+  }
+
+  _checkQuantity() async {
+    final user = context.read<UserProvider>().user;
+    storeId = user != null ? user.storeId : '';
+    await db
+        .collection('products')
+        .where('store_id', isEqualTo: storeId)
+        .get()
+        .then((value) async {
+      for (final i in value.docs) {
+        List quantityValue = [];
+        await db
+            .collection('sub_products')
+            .where('product_id', isEqualTo: i.id)
+            .get()
+            .then((subData) {
+          for (final j in subData.docs) {
+            setState(() {
+              quantityValue.add(j['sub_product_quantity']);
+            });
+          }
+        });
+        setState(() {
+          checkQuantity.add({
+            "product_id": i.id,
+            "sub_quantity": [...quantityValue]
+          });
+        });
+      }
+    });
+    checkQuantity.forEach((value) {
+      value['sub_quantity'] =
+          value['sub_quantity'].reduce((numr, e) => numr + e);
+    });
+    if (listDatas.isNotEmpty) {
+      int i = 0;
+      listDatas.forEach((element) {
+        if (checkQuantity
+            .map((e) => e['product_id'])
+            .toList()
+            .contains(element['product_id'])) {
+          element['sale_out'] = checkQuantity[i]['sub_quantity'];
+        }
+        i++;
+      });
+    }
   }
 
   void _getData() async {
@@ -37,9 +87,9 @@ class _MyWidgetState extends State<Sell> {
     final provider = Provider.of<SellProvider>(context, listen: false);
     storeId = user != null ? user.storeId : '';
     setState(() {
-    role = user!.role;
+      role = user!.role;
     });
-     if (item.length == 0) {
+    if (item.length == 0) {
       QuerySnapshot querySnapshot = await db
           .collection('products')
           .where('store_id', isEqualTo: storeId)
@@ -53,11 +103,13 @@ class _MyWidgetState extends State<Sell> {
           });
         });
       });
+      _search('');
       provider.addItem(listDatas);
     } else {
       _newDataCallback(item);
     }
   }
+
   void _newDataCallback(List data) async {
     final item = context.read<SellProvider>().items;
     final provider = Provider.of<SellProvider>(context, listen: false);
@@ -79,6 +131,7 @@ class _MyWidgetState extends State<Sell> {
       setState(() {
         listDatas = updatedData;
       });
+      _search('');
     } else {
       QuerySnapshot querySnapshot = await db
           .collection('products')
@@ -93,6 +146,7 @@ class _MyWidgetState extends State<Sell> {
           });
         });
       });
+      _search('');
       provider.addItem(listDatas);
     }
     List resultQuantity = [];
@@ -103,147 +157,96 @@ class _MyWidgetState extends State<Sell> {
             .toList();
       }
     });
-    newQuantity = resultQuantity.length > 0 ? resultQuantity.reduce((value, element) => value + element) : 0;
+    newQuantity = resultQuantity.length > 0
+        ? resultQuantity.reduce((value, element) => value + element)
+        : 0;
   }
-
-
-
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        title: const Text('ขายสินค้าออก'),
-        actions: <Widget>[
-          Center(
-            child: Text(
-              newQuantity.toString() == "0" ? "" : newQuantity.toString(),
-              style: TextStyle(fontSize: 22),
+        appBar: AppBar(
+          centerTitle: true,
+          title: const Text('ขายสินค้าออก'),
+          actions: <Widget>[
+            Center(
+              child: Text(
+                newQuantity.toString() == "0" ? "" : newQuantity.toString(),
+                style: TextStyle(fontSize: 22),
+              ),
             ),
-          ),
-          IconButton(
-              icon: const Icon(
-                Icons.arrow_forward,
-                size: 25,
-              ),
-              onPressed: () {
-                List dataOrdering = [];
-                listDatas.forEach((element) {
-                  if (element['new_subproduct'] != null) {
-                    dataOrdering.add(element);
-                  }
-                });
-                if (newQuantity > 0) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                            Export(dataOrdering: dataOrdering)),
-                  );
-                } else {
-                  showDialog<void>(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return AlertDialog(
-                        title: const Text('ไม่มีสินค้าในรายการที่ถูกเลือก'),
-                        content: const Text('กรุณาเลือกสินค้าและระบุจำนวน'),
-                        actions: <Widget>[
-                          TextButton(
-                            style: TextButton.styleFrom(
-                              textStyle: Theme.of(context).textTheme.labelLarge,
-                            ),
-                            child: const Text('ตกลง'),
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                            },
-                          ),
-                        ],
-                      );
-                    },
-                  );
-                }
-              }
-              ),
-        ],
-      ),
-      body: Center(
-        child: Column(
-          children: <Widget>[
-            const TextField(
-              decoration: InputDecoration(
-                  filled: true,
-                  fillColor:Colors.white,
-                  hintText: " ค้นหา ",
-                  prefixIcon: Icon(Icons.search),
-                  prefixIconColor: Colors.deepOrange),
-            ),
-            Container(
-              height: 40,
-              decoration: const BoxDecoration(
-                color: Colors.deepOrange,
-              ),
-              child: Row(
-                children: [
-                  const Padding(
-                    padding:
-                        EdgeInsets.only(left: 10, right: 0, top: 0, bottom: 0),
-                    child: Icon(
-                      Icons.folder_copy_outlined,
-                      color: Colors.white,
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 10),
-                    child: TextButton(
-                      onPressed: () => showDialog<String>(
-                        context: context,
-                        builder: (BuildContext context) => AlertDialog(
-                          title: const Text('หมวดหมู่สินค้า'),
-                          content: SizedBox(
-                            height: 70,
-                            child: Column(
-                              children: const [
-                                Text('หมวดหมู่สินค้าทั้งหมด(3)'),
-                                Text('หมวดหมู่DRESS(1)'),
-                                Text('หมวดหมู่Oversize(2)'),
-                              ],
-                            ),
-                          ),
+            IconButton(
+                icon: const Icon(
+                  Icons.arrow_forward,
+                  size: 25,
+                ),
+                onPressed: () {
+                  List dataOrdering = [];
+                  listDatas.forEach((element) {
+                    if (element['new_subproduct'] != null) {
+                      dataOrdering.add(element);
+                    }
+                  });
+                  if (newQuantity > 0) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              Export(dataOrdering: dataOrdering)),
+                    );
+                  } else {
+                    showDialog<void>(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: const Text('ไม่มีสินค้าในรายการที่ถูกเลือก'),
+                          content: const Text('กรุณาเลือกสินค้าและระบุจำนวน'),
                           actions: <Widget>[
                             TextButton(
-                              onPressed: () => Navigator.pop(context, 'Cancel'),
-                              child: const Text('Cancel'),
-                            ),
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, 'OK'),
-                              child: const Text('OK'),
+                              style: TextButton.styleFrom(
+                                textStyle:
+                                    Theme.of(context).textTheme.labelLarge,
+                              ),
+                              child: const Text('ตกลง'),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
                             ),
                           ],
-                        ),
-                      ),
-                      child: const Text(
-                        'หมวดหมู่ทั้งหมด',
-                        style: TextStyle(color: Colors.white, fontSize: 16),
-                      ),
-                    ),
-                  ),
-                ],
+                        );
+                      },
+                    );
+                  }
+                }),
+          ],
+        ),
+        body: Center(
+          child: Column(
+            children: <Widget>[
+              TextField(
+                controller: _searchController,
+                onChanged: (query) => _search(query),
+                decoration: const InputDecoration(
+                    filled: true,
+                    fillColor: Colors.white,
+                    hintText: " ค้นหา ",
+                    prefixIcon: Icon(Icons.search),
+                    prefixIconColor: Colors.deepOrange),
               ),
-            ),
-            Expanded(
-                child: GridView.count(
-                    crossAxisCount: 2,
-                    children: listDatas
-                        .map((i) => InkWell(
-                            onTap: () => {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) => Details(productId: i['product_id'])),
-                                  )
-                                },
-                            child: Container(
+              Expanded(
+                  child: GridView.count(
+                      crossAxisCount: 2,
+                      children: _searchResultList
+                          .map((i) => InkWell(
+                              onTap: () => {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) => Details(
+                                              productId: i['product_id'])),
+                                    )
+                                  },
+                              child: Container(
                                 margin: const EdgeInsets.only(
                                     left: 10.0,
                                     bottom: 10.0,
@@ -258,53 +261,96 @@ class _MyWidgetState extends State<Sell> {
                                     ),
                                   ],
                                   color: i['new_subproduct'] != null
-                                        ? Color.fromARGB(255, 247, 143, 132)
-                                        : Colors.deepOrange[50],
+                                      ? Color.fromARGB(255, 247, 143, 132)
+                                      : Colors.deepOrange[50],
                                   borderRadius: const BorderRadius.all(
                                       Radius.circular(5.0)),
                                 ),
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                child: Stack(
                                   children: [
-                                    Container(
-                                      margin: const EdgeInsets.only(
-                                          left: 10.0, bottom: 20.0, top: 5.0),
-                                      child: Text(i['product_name']),
+                                    Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Container(
+                                          margin: const EdgeInsets.only(
+                                              left: 10.0,
+                                              bottom: 20.0,
+                                              top: 5.0),
+                                          child: Text(i['product_name']),
+                                        ),
+                                        Center(
+                                            child: FittedBox(
+                                                child: Image.network(
+                                          i['product_image'],
+                                          height: 90,
+                                          width: 90,
+                                          fit: BoxFit.fill,
+                                        )))
+                                      ],
                                     ),
-                                    Center(
-                                          child: FittedBox(
-                                              child: Image(
-                                        image:
-                                            AssetImage(i['product_image']),
-                                        height: 90,
-                                        width: 90,
-                                        fit: BoxFit.fill,
-                                      )))
+                                    if (i['sale_out'] != null)
+                                      i['sale_out'] < 1
+                                          ? Positioned.fill(
+                                              child: Center(
+                                                child: Container(
+                                                  height: 30,
+                                                  width: 100,
+                                                  color: Colors.red,
+                                                  child: Center(
+                                                      child: Text('สินค้าหมด',
+                                                          style: TextStyle(
+                                                              color: Colors
+                                                                  .white))),
+                                                ),
+                                              ),
+                                            )
+                                          : const SizedBox.shrink()
                                   ],
-                                ))))
-                        .toList()))
-          ],
-        ),
-      ),
-      floatingActionButton:
-          Column(mainAxisAlignment: MainAxisAlignment.end, children: [
-        Padding(
-          padding: const EdgeInsets.only(bottom: 10),
-          child: FloatingActionButton(
-            onPressed: () => {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const Imported()), //ต้องไปกล้องถ่ายQr
-              )
-            },
-            heroTag: "fit_screen_sharp",
-            child: const Icon(Icons.fit_screen_sharp),
+                                ),
+                              )))
+                          .toList()))
+            ],
           ),
         ),
-      ]),
-      bottomNavigationBar: BottomNavbar(number: 1, role: role ,)
-    );
+        floatingActionButton:
+            Column(mainAxisAlignment: MainAxisAlignment.end, children: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: FloatingActionButton(
+              onPressed: () => {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          const Imported()), //ต้องไปกล้องถ่ายQr
+                )
+              },
+              heroTag: "fit_screen_sharp",
+              child: const Icon(Icons.fit_screen_sharp),
+            ),
+          ),
+        ]),
+        bottomNavigationBar: BottomNavbar(
+          number: 1,
+          role: role,
+        ));
+  }
+
+  void _search(String query) {
+    List matches = [];
+    matches.addAll(listDatas);
+    if (query.isNotEmpty) {
+      matches.retainWhere((match) {
+        String productName = match['product_name'];
+        return productName.toLowerCase().contains(query.toLowerCase());
+      });
+    }
+    setState(() {
+      _searchResultList.clear();
+      _searchResultList.addAll(matches);
+    });
   }
 }

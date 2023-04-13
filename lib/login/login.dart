@@ -1,10 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:inventoryapp/account/auditday.dart';
 import 'package:inventoryapp/db/my_project.dart';
 import 'package:inventoryapp/imported/imported.dart';
 import 'package:inventoryapp/login/register.dart';
 import 'package:inventoryapp/provider/provider.dart';
+import 'package:inventoryapp/sell/sell.dart';
 import 'package:provider/provider.dart';
 
 class LoginSreen extends StatefulWidget {
@@ -20,17 +22,11 @@ class _LoginSreenState extends State<LoginSreen> {
   final _passwordController = TextEditingController();
   String _errorMessage = '';
   final db = FirebaseFirestore.instance;
-@override
-  void initState() {
-    super.initState();
-    _loginCheck();
-  }
-  _loginCheck (){
-
-  }
+  String role = '';
   _login(String email, String password) async {
     final querydb = await db.collection("users").get();
     final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final setIndex = Provider.of<IndexNavbar>(context, listen: false);
     List userLogin = [];
     querydb.docs.forEach((doc) {
       if (doc['email'] == email) {
@@ -43,13 +39,41 @@ class _LoginSreenState extends State<LoginSreen> {
         email: userLogin[0]['email'],
         storeId: userLogin[0]['store_id'],
         transacId: setTransacId,
-        role:userLogin[0]['role']);
+        role: userLogin[0]['role'],
+        name:userLogin[0]['name']);
     userProvider.setUser(modelUser);
+    setState(() {
+      role = userLogin[0]['role'];
+    });
     return userLogin
             .where((element) => element['password'] == password)
             .isNotEmpty
         ? true
         : false;
+  }
+
+  void getRoleIndex(String role) {
+    if (role == "สินค้าเข้า") {
+      Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const Imported()),
+          (route) => false);
+    } else if (role == "ขายสินค้าออก") {
+      Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const Sell()),
+          (route) => false);
+    } else if (role == "บัญชี") {
+      Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const Auditday()),
+          (route) => false);
+    } else {
+      Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const Imported()),
+          (route) => false);
+    }
   }
 
   Future<String> _createTableTransactions(String storeId) async {
@@ -58,6 +82,7 @@ class _LoginSreenState extends State<LoginSreen> {
     final checkQuery = await db
         .collection('transactions')
         .where('date', isEqualTo: formattedDate)
+        .where('store_id', isEqualTo: storeId)
         .get();
     for (final data in checkQuery.docs) {
       setState(() {
@@ -95,37 +120,6 @@ class _LoginSreenState extends State<LoginSreen> {
                   height: 150,
                   width: 200,
                 ),
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ElevatedButton(
-                      onPressed: () {
-                        setState(() {
-                          change_page = 1;
-                        });
-                      },
-                      child: const Text('เจ้าของ'),
-                      style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.deepOrange,
-                          minimumSize: const Size(150, 35),
-                          textStyle: const TextStyle(fontSize: 13),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(2)))),
-                  ElevatedButton(
-                      onPressed: () {
-                        setState(() {
-                          change_page = 2;
-                        });
-                      },
-                      child: const Text('ผู้ช่วยผู้ดูแล'),
-                      style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.deepOrange,
-                          minimumSize: const Size(150, 35),
-                          textStyle: const TextStyle(fontSize: 13),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(2)))),
-                ],
               ),
               change_page == 2
                   ? Container(
@@ -223,11 +217,12 @@ class _LoginSreenState extends State<LoginSreen> {
                       // }
                       if (await _login(
                           _emailController.text, _passwordController.text)) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const Imported()),
-                        );
+                        getRoleIndex(role);
+                        // Navigator.pushAndRemoveUntil(
+                        //     context,
+                        //     MaterialPageRoute(
+                        //         builder: (context) => const Sell()),
+                        //     (route) => false);
                       } else {
                         setState(() {
                           _errorMessage = 'อีเมล หรือ รหัส ผิด';

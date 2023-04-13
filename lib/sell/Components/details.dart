@@ -136,13 +136,15 @@ class _DetailsState extends State<Details> {
           ],
         ),
         body: ListView(children: [
-          Container(
-              alignment: Alignment.topCenter,
-              child: Image(
-                image: AssetImage(prouduct['product_image']),
-                height: 200,
-                width: 200,
-              )),
+         Center(
+                  child: FittedBox(
+                      child: Image.network(
+                  prouduct['product_image'].toString(),
+                  height: 200,
+                  width: 200,
+                  fit: BoxFit.fill,
+                ))),
+              
           Container(
               alignment: Alignment.topCenter,
               child: Row(
@@ -241,10 +243,11 @@ class _DetailsState extends State<Details> {
                                     height: 40,
                                     child: TextField(
                                       controller: TextEditingController(
-                                          text:
-                                              i['sub_product_price'].toString()),
+                                          text: i['sub_product_price']
+                                              .toString()),
                                       onChanged: (value) {
-                                        i['sub_product_price'] = double.parse(value);
+                                        i['sub_product_price'] =
+                                            double.parse(value);
                                       },
                                       style: const TextStyle(
                                           color: Color(0xFFbdc6cf)),
