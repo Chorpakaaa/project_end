@@ -88,6 +88,7 @@ class _ProductdetailsState extends State<Productdetails> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        centerTitle: true,
         title: const Text("รายละเอียดสินค้าคงคลัง"),
       ),
       body: SingleChildScrollView(
@@ -175,9 +176,6 @@ class _ProductdetailsState extends State<Productdetails> {
                   ],
                 ),
               ),
-              const SizedBox(
-                height: 15,
-              ),
               Container(
                 padding: const EdgeInsets.all(10),
                 color: Colors.deepOrange,
@@ -213,50 +211,57 @@ class _ProductdetailsState extends State<Productdetails> {
                                       width: 100,
                                       fit: BoxFit.fill,
                                     )),
-                                    Text(i['product_name'])
+                                    Text(i['product_name'],
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14))
                                   ],
                                 ),
-                                const Spacer(),
-                                Column(
-                                    children: i['sub_product']
-                                        .map<Widget>(
-                                          (sub) => Container(
-                                            child: Center(
-                                              child: Column(children: [
-                                                Text(sub['sub_product_name'],
-                                                    style: const TextStyle(
-                                                        color: Colors.black,
-                                                        fontSize: 14)),
-                                                Text(
-                                                    'จำนวน : ' +
-                                                        sub['sub_product_quantity']
-                                                            .toString(),
-                                                    style: const TextStyle(
-                                                        color: Colors.black,
-                                                        fontSize: 14)),
-                                                Text(
-                                                    'มูลค่าต้นทุน : ' +
-                                                        sub['sub_product_cost']
-                                                            .toString(),
-                                                    style: const TextStyle(
-                                                        color: Colors.black,
-                                                        fontSize: 14)),
-                                                Text(
-                                                    'มูลค่าราคาขาย : ' +
-                                                        sub['sub_product_price']
-                                                            .toString(),
-                                                    style: const TextStyle(
-                                                        color: Colors.black,
-                                                        fontSize: 14)),
-                                                const SizedBox(
-                                                  height: 5,
-                                                )
-                                              ]),
+                                const SizedBox(
+                                  width: 5,
+                                ),
+                                Expanded(
+                                  child: Column(
+                                      children: i['sub_product']
+                                          .map<Widget>(
+                                            (sub) => Container(
+                                              width: double.maxFinite,
+                                              child: Center(
+                                                child: Column(children: [
+                                                  Text(sub['sub_product_name'],
+                                                      style: const TextStyle(
+                                                          color: Colors.black,
+                                                          fontSize: 14)),
+                                                  Text(
+                                                      'จำนวน : ' +
+                                                          sub['sub_product_quantity']
+                                                              .toString(),
+                                                      style: const TextStyle(
+                                                          color: Colors.black,
+                                                          fontSize: 14)),
+                                                  Text(
+                                                      'มูลค่าต้นทุน : ' +
+                                                          sub['sub_product_cost']
+                                                              .toString(),
+                                                      style: const TextStyle(
+                                                          color: Colors.black,
+                                                          fontSize: 14)),
+                                                  Text(
+                                                      'มูลค่าราคาขาย : ' +
+                                                          sub['sub_product_price']
+                                                              .toString(),
+                                                      style: const TextStyle(
+                                                          color: Colors.black,
+                                                          fontSize: 14)),
+                                                  const SizedBox(
+                                                    height: 5,
+                                                  )
+                                                ]),
+                                              ),
                                             ),
-                                          ),
-                                        )
-                                        .toList()),
-                                Spacer()
+                                          )
+                                          .toList()),
+                                ),
                               ],
                             )),
                       )
@@ -282,17 +287,19 @@ class _ProductdetailsState extends State<Productdetails> {
     final doc = pw.Document();
     String formattedDateTime =
         DateFormat('dd/MM/yyyy HH:mm').format(DateTime.now());
-    final font = await PdfGoogleFonts.k2DThin();
+    final font = await PdfGoogleFonts.k2DRegular();
     doc.addPage(pw.Page(
       build: (context) {
         return pw.Column(children: [
           pw.Align(
               alignment: pw.Alignment.centerRight,
               child: pw.Text('Export Date ' + formattedDateTime)),
+              pw.SizedBox(height: 15),
           pw.Align(
               alignment: pw.Alignment.centerLeft,
               child: pw.Text('รายการสินค้าคงคลัง',
                   style: pw.TextStyle(font: font, fontSize: 18))),
+                  pw.SizedBox(height: 15),
           pw.Container(
               child: pw.Row(children: [
             pw.Expanded(

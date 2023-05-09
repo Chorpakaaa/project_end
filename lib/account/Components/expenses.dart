@@ -26,6 +26,7 @@ class _ExpensesState extends State<Expenses> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        centerTitle: true,
         title: const Text("ค่าใช้จ่ายอื่นๆ"),
         actions: [
           TextButton(
@@ -67,7 +68,7 @@ class _ExpensesState extends State<Expenses> {
                     ),
                     Expanded(
                       child: Text(
-                        formattedDate, //ทำเป็นวันที่จริงๆ
+                        formattedDate,
                         style: const TextStyle(color: Colors.black),
                         textAlign: TextAlign.right,
                       ),

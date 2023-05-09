@@ -29,10 +29,13 @@ class _LoginSreenState extends State<LoginSreen> {
     final setIndex = Provider.of<IndexNavbar>(context, listen: false);
     List userLogin = [];
     querydb.docs.forEach((doc) {
-      if (doc['email'] == email) {
-        userLogin.add(doc.data());
-      }
+      if(email == doc['email']){
+      userLogin.add(doc.data());
+      };
     });
+     if (userLogin.length == 0) {
+      return false;
+    }
     String setTransacId =
         await _createTableTransactions(userLogin[0]['store_id']);
     final modelUser = UserModel(
@@ -40,13 +43,15 @@ class _LoginSreenState extends State<LoginSreen> {
         storeId: userLogin[0]['store_id'],
         transacId: setTransacId,
         role: userLogin[0]['role'],
-        name:userLogin[0]['name']);
+        name: userLogin[0]['name']);
     userProvider.setUser(modelUser);
     setState(() {
       role = userLogin[0]['role'];
     });
+   
     return userLogin
-            .where((element) => element['password'] == password)
+            .where((element) =>
+                element['password'] == password && element['email'] == email)
             .isNotEmpty
         ? true
         : false;
@@ -204,25 +209,8 @@ class _LoginSreenState extends State<LoginSreen> {
                       style: TextStyle(color: Colors.white),
                     ),
                     onPressed: () async {
-                      // if (user.length == 1) {
-                      //   Navigator.push(
-                      //     context,
-                      //     MaterialPageRoute(
-                      //         builder: (context) => const Imported()),
-                      //   );
-                      // } else {
-                      //   setState(() {
-                      //     _errorMessage = 'อีเมล หรือ รหัส ผิด';
-                      //   });
-                      // }
-                      if (await _login(
-                          _emailController.text, _passwordController.text)) {
+                      if (await _login( _emailController.text, _passwordController.text)) {
                         getRoleIndex(role);
-                        // Navigator.pushAndRemoveUntil(
-                        //     context,
-                        //     MaterialPageRoute(
-                        //         builder: (context) => const Sell()),
-                        //     (route) => false);
                       } else {
                         setState(() {
                           _errorMessage = 'อีเมล หรือ รหัส ผิด';

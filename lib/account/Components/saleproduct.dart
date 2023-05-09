@@ -5,8 +5,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:inventoryapp/account/Components/orderdetail.dart';
-import 'package:inventoryapp/account/Components/saleproductmonth.dart';
-import 'package:inventoryapp/account/Components/saleproductyear.dart';
 import 'package:inventoryapp/account/auditday.dart';
 import 'package:inventoryapp/provider/provider.dart';
 import 'package:inventoryapp/widget/nevbar.dart';
@@ -90,284 +88,309 @@ class _saleproductState extends State<saleproduct> {
     return DefaultTabController(
       length: 3,
       child: Scaffold(
-        appBar: AppBar(
-          centerTitle: true,
-          title: const Text('ยอดขาย'),
-        ),
-        body: TabBarView(
-          children: [
-            SingleChildScrollView(
-              padding: const EdgeInsets.all(10),
-              child: Column(
-                children: [
-                  Column(
-                    children: listData
-                        .map<Widget>(
-                          (i) => Container(
-                            margin: const EdgeInsets.only(
-                                top: 20, left: 5, right: 5),
-                            decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(15),
-                                border: Border.all(color: Colors.grey)),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.all(5),
-                                  child: Row(
-                                    children: <Widget>[
-                                      Text(i['date'],
-                                          style: TextStyle(fontSize: 16)),
-                                      Spacer(),
-                                      Text(i['profit'].toString(),
-                                          style: TextStyle(fontSize: 16)),
+          appBar: AppBar(
+            centerTitle: true,
+            title: const Text('ยอดขาย'),
+          ),
+          body: TabBarView(
+            children: [
+              SingleChildScrollView(
+                padding: const EdgeInsets.all(10),
+                child: Column(
+                  children: [
+                    Column(
+                      children: listData
+                          .map<Widget>(
+                            (i) => Container(
+                              margin: const EdgeInsets.only(
+                                  top: 20, left: 5, right: 5),
+                              decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(15),
+                                  border: Border.all(color: Colors.grey)),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.all(5),
+                                    child: Row(
+                                      children: <Widget>[
+                                        Text(i['date'],
+                                            style: TextStyle(fontSize: 16)),
+                                        Spacer(),
+                                        Text(i['profit'].toString(),
+                                            style: TextStyle(fontSize: 16)),
+                                      ],
+                                    ),
+                                  ),
+                                  const Divider(
+                                    thickness: 1,
+                                    color: Colors.grey,
+                                  ),
+                                  Row(
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.all(5),
+                                        child: Row(
+                                          children: [
+                                            const SizedBox(height: 30),
+                                            TextButton(
+                                              style: OutlinedButton.styleFrom(
+                                                padding:
+                                                    const EdgeInsets.all(5),
+                                                textStyle: const TextStyle(
+                                                    fontSize: 15),
+                                                primary: Colors.black,
+                                                side: const BorderSide(
+                                                    width: 1,
+                                                    color: Colors.black),
+                                              ),
+                                              onPressed: () {
+                                                _generatePdf(i);
+                                              },
+                                              child: const Text('Export PDF',
+                                                  style: TextStyle(
+                                                      color: Colors.black)),
+                                            ),
+                                          ],
+                                        ),
+                                      )
                                     ],
                                   ),
-                                ),
-                                const Divider(
-                                  thickness: 1,
-                                  color: Colors.grey,
-                                ),
-                                Row(
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.all(5),
-                                      child: Row(
-                                        children: [
-                                          const SizedBox(height: 30),
-                                          TextButton(
-                                            style: OutlinedButton.styleFrom(
-                                              padding: const EdgeInsets.all(5),
-                                              textStyle:
-                                                  const TextStyle(fontSize: 15),
-                                              primary: Colors.black,
-                                              side: const BorderSide(
-                                                  width: 1,
-                                                  color: Colors.black),
-                                            ),
-                                            onPressed: () {
-                                              _generatePdf(i);
-                                            },
-                                            child: const Text(
-                                                'Export PDF', //ไฟล์ pdf
-                                                style: TextStyle(
-                                                    color: Colors.black)),
-                                          ),
-                                        ],
-                                      ),
-                                    )
-                                  ],
-                                ),
-                                const Divider(
-                                  thickness: 1,
-                                  color: Colors.grey,
-                                ),
-                                Column(
-                                  children: i['order'].length > 0
-                                      ? i['order']
-                                          .map<Widget>((iSub) => Center(
-                                                  child: InkWell(
-                                                onTap: () {
-                                                  Navigator.push(
-                                                    context,
-                                                    MaterialPageRoute(
-                                                        builder: (context) =>
-                                                            Orderdetail(
-                                                                orderId: iSub[
-                                                                    'order_id'])),
-                                                  );
-                                                },
-                                                child: Column(
-                                                  children: [
-                                                    Row(
-                                                      children: [
-                                                        Container(
-                                                          padding:
-                                                              const EdgeInsets
-                                                                  .all(10),
-                                                          alignment:
-                                                              Alignment.topLeft,
-                                                          height: 35,
-                                                          width: 60,
-                                                          margin:
-                                                              const EdgeInsets
-                                                                  .all(10),
-                                                          color:
-                                                              Colors.green[300],
-                                                          child: Text(
-                                                              iSub['status'],
-                                                              style:
-                                                                  const TextStyle(
-                                                                      fontSize:
-                                                                          12),
-                                                              textAlign:
-                                                                  TextAlign
-                                                                      .center),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                    Column(
-                                                      mainAxisSize:
-                                                          MainAxisSize.min,
-                                                      children: [
-                                                        Padding(
-                                                          padding:
-                                                              const EdgeInsets
-                                                                  .all(10),
-                                                          child: Row(
-                                                            children: <Widget>[
-                                                              Text(
-                                                                  'เลขที่ ' +
-                                                                      iSub['order_number']
-                                                                          .toString(),
-                                                                  style: const TextStyle(
-                                                                      fontSize:
-                                                                          15)),
-                                                              const Spacer(),
-                                                              const Text(
-                                                                  'จ่ายแล้ว',
-                                                                  style: TextStyle(
-                                                                      fontSize:
-                                                                          15)),
-                                                            ],
+                                  const Divider(
+                                    thickness: 1,
+                                    color: Colors.grey,
+                                  ),
+                                  Column(
+                                    children: i['order'].length > 0
+                                        ? i['order']
+                                            .map<Widget>((iSub) => Center(
+                                                    child: InkWell(
+                                                  onTap: () {
+                                                    Navigator.push(
+                                                      context,
+                                                      MaterialPageRoute(
+                                                          builder: (context) =>
+                                                              Orderdetail(
+                                                                  orderId: iSub[
+                                                                      'order_id'])),
+                                                    );
+                                                  },
+                                                  child: Column(
+                                                    children: [
+                                                      Row(
+                                                        children: [
+                                                          Container(
+                                                            padding:
+                                                                const EdgeInsets
+                                                                    .all(10),
+                                                            alignment: Alignment
+                                                                .topCenter,
+                                                            height: 35,
+                                                            width: 60,
+                                                            margin:
+                                                                const EdgeInsets
+                                                                    .all(10),
+                                                            color: Colors
+                                                                .green[300],
+                                                            child: Text(
+                                                                iSub['status'],
+                                                                style:
+                                                                    const TextStyle(
+                                                                        fontSize:
+                                                                            12),
+                                                                textAlign:
+                                                                    TextAlign
+                                                                        .center),
                                                           ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                    Padding(
-                                                      padding: const EdgeInsets
-                                                              .fromLTRB(
-                                                          20, 0, 0, 0),
-                                                      child: Column(
+                                                        ],
+                                                      ),
+                                                      Column(
                                                         mainAxisSize:
                                                             MainAxisSize.min,
                                                         children: [
                                                           Padding(
                                                             padding:
                                                                 const EdgeInsets
-                                                                    .all(5),
+                                                                    .all(10),
                                                             child: Row(
                                                               children: <
                                                                   Widget>[
+                                                                Padding(
+                                                                  padding: const EdgeInsets
+                                                                          .only(
+                                                                      left: 5,
+                                                                      right: 5),
+                                                                  child: Text(
+                                                                      'เลขที่ ' +
+                                                                          iSub['order_number']
+                                                                              .toString(),
+                                                                      style: const TextStyle(
+                                                                          fontSize:
+                                                                              15)),
+                                                                ),
+                                                                const Spacer(),
                                                                 const Text(
-                                                                    'จำนวน',
+                                                                    'จ่ายแล้ว',
                                                                     style: TextStyle(
                                                                         fontSize:
                                                                             15)),
-                                                                Spacer(),
-                                                                Text(
-                                                                    iSub['total_quantity']
-                                                                        .toString(),
-                                                                    style: const TextStyle(
-                                                                        fontSize:
-                                                                            15)),
-                                                                const SizedBox(
-                                                                  width: 40,
-                                                                )
                                                               ],
                                                             ),
                                                           ),
                                                         ],
                                                       ),
-                                                    ),
-                                                    const SizedBox(
-                                                      height: 15,
-                                                    ),
-                                                    Padding(
-                                                      padding: const EdgeInsets
-                                                              .fromLTRB(
-                                                          20, 0, 0, 0),
-                                                      child: Column(
-                                                        mainAxisSize:
-                                                            MainAxisSize.min,
-                                                        children: [
-                                                          Padding(
-                                                            padding:
-                                                                const EdgeInsets
-                                                                    .all(5),
-                                                            child: Row(
-                                                              children: <
-                                                                  Widget>[
-                                                                Text(
-                                                                    'เวลาทำรายการ ' +
-                                                                        iSub[
-                                                                            'date_time'],
-                                                                    style: const TextStyle(
-                                                                        fontSize:
-                                                                            15)),
-                                                              ],
+                                                      Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                    .only(
+                                                                left: 5,
+                                                                right: 5),
+                                                        child: Column(
+                                                          mainAxisSize:
+                                                              MainAxisSize.min,
+                                                          children: [
+                                                            Padding(
+                                                              padding:
+                                                                  const EdgeInsets
+                                                                          .only(
+                                                                      left: 10,
+                                                                      right:
+                                                                          10),
+                                                              child: Row(
+                                                                children: <
+                                                                    Widget>[
+                                                                  const Text(
+                                                                      'จำนวน',
+                                                                      style: TextStyle(
+                                                                          fontSize:
+                                                                              15)),
+                                                                  const Spacer(),
+                                                                  Text(
+                                                                      iSub['total_quantity']
+                                                                          .toString(),
+                                                                      style: const TextStyle(
+                                                                          fontSize:
+                                                                              15)),
+                                                                ],
+                                                              ),
                                                             ),
-                                                          ),
-                                                        ],
+                                                          ],
+                                                        ),
                                                       ),
-                                                    ),
-                                                    Padding(
-                                                      padding: const EdgeInsets
-                                                              .fromLTRB(
-                                                          20, 0, 0, 0),
-                                                      child: Column(
-                                                        mainAxisSize:
-                                                            MainAxisSize.min,
-                                                        children: [
-                                                          Padding(
-                                                            padding:
-                                                                const EdgeInsets
-                                                                    .all(5),
-                                                            child: Row(
-                                                              children: <
-                                                                  Widget>[
-                                                                Text(
-                                                                    'สร้างโดย : ' +
-                                                                        iSub[
-                                                                            'name'],
-                                                                    style: const TextStyle(
-                                                                        fontSize:
-                                                                            15)),
-                                                              ],
+                                                      const SizedBox(
+                                                        height: 15,
+                                                      ),
+                                                      Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                    .only(
+                                                                left: 5,
+                                                                right: 5),
+                                                        child: Column(
+                                                          mainAxisSize:
+                                                              MainAxisSize.min,
+                                                          children: [
+                                                            Padding(
+                                                              padding:
+                                                                  const EdgeInsets
+                                                                          .only(
+                                                                      left: 10,
+                                                                      right:
+                                                                          10),
+                                                              child: Row(
+                                                                children: <
+                                                                    Widget>[
+                                                                  Text(
+                                                                      'เวลาทำรายการ ' +
+                                                                          iSub[
+                                                                              'date_time'],
+                                                                      style: const TextStyle(
+                                                                          fontSize:
+                                                                              15)),
+                                                                ],
+                                                              ),
                                                             ),
-                                                          ),
-                                                        ],
+                                                          ],
+                                                        ),
                                                       ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              )))
-                                          .toList()
-                                      : [
-                                          Padding(
-                                            padding: const EdgeInsets.fromLTRB(
-                                                110, 0, 0, 0),
-                                            child: Column(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Padding(
-                                                  padding:
-                                                      const EdgeInsets.all(30),
-                                                  child: Row(
-                                                    children: const <Widget>[
-                                                      Text('ไม่มีข้อมูล',
-                                                          style: TextStyle(
-                                                              fontSize: 17)),
+                                                      Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                    .only(
+                                                                left: 5,
+                                                                right: 5),
+                                                        child: Column(
+                                                          mainAxisSize:
+                                                              MainAxisSize.min,
+                                                          children: [
+                                                            Padding(
+                                                              padding:
+                                                                  const EdgeInsets
+                                                                          .only(
+                                                                      left: 10,
+                                                                      right:
+                                                                          10),
+                                                              child: Row(
+                                                                children: <
+                                                                    Widget>[
+                                                                  Text(
+                                                                      'สร้างโดย : ' +
+                                                                          iSub[
+                                                                              'name'],
+                                                                      style: const TextStyle(
+                                                                          fontSize:
+                                                                              15)),
+                                                                ],
+                                                              ),
+                                                            ),
+                                                            const Divider(
+                                                              thickness: 1,
+                                                              color:
+                                                                  Colors.grey,
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
                                                     ],
                                                   ),
-                                                ),
-                                              ],
+                                                )))
+                                            .toList()
+                                        : [
+                                            Padding(
+                                              padding:
+                                                  const EdgeInsets.fromLTRB(
+                                                      110, 0, 0, 0),
+                                              child: Column(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            30),
+                                                    child: Row(
+                                                      children: const <Widget>[
+                                                        Text('ไม่มีข้อมูล',
+                                                            style: TextStyle(
+                                                                fontSize: 17)),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
                                             ),
-                                          ),
-                                        ],
-                                ),
-                              ],
+                                          ],
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                        )
-                        .toList(),
-                  ),
-                ],
-              ),
-            )
-          ],
-        )
-      ),
+                          )
+                          .toList(),
+                    ),
+                  ],
+                ),
+              )
+            ],
+          )),
     );
   }
 
@@ -375,7 +398,7 @@ class _saleproductState extends State<saleproduct> {
     final doc = pw.Document();
     String formattedDateTime =
         DateFormat('dd/MM/yyyy HH:mm').format(DateTime.now());
-    final font = await PdfGoogleFonts.k2DThin();
+    final font = await PdfGoogleFonts.k2DRegular();
     List userOrder = [];
     final obj = {};
     List sum = [];
@@ -395,18 +418,19 @@ class _saleproductState extends State<saleproduct> {
     }
     final output = result.entries
         .map((entry) => {"name": entry.key, "total": entry.value})
-        .toList();
+        .toList(); 
     doc.addPage(pw.Page(
       build: (context) {
         return pw.Column(children: [
           pw.Align(
               alignment: pw.Alignment.centerRight,
               child: pw.Text('Export Date ' + formattedDateTime)),
+              pw.SizedBox(height: 15),
           pw.Align(
               alignment: pw.Alignment.center,
               child: pw.Text('ยอดขายวันที่ ' + data['date'],
                   style: pw.TextStyle(font: font, fontSize: 18))),
-          pw.SizedBox(height: 10),
+          pw.SizedBox(height: 15),
           pw.Table(
               border: pw.TableBorder(
                   bottom: pw.BorderSide(

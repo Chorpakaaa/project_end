@@ -3,7 +3,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:inventoryapp/provider/provider.dart';
-import 'package:inventoryapp/sell/Components/sellsuccess.dart';
 import 'package:inventoryapp/sell/sell.dart';
 import 'package:inventoryapp/widget/nevbar.dart';
 import 'package:provider/provider.dart';
@@ -138,11 +137,11 @@ class _ExportState extends State<Export> {
                             ),
                             child: const Text('ตกลง'),
                             onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => const Sell()),
-                              );
+                              Navigator.pushAndRemoveUntil(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => const Sell()),
+                                  (route) => false);
                             },
                           ),
                         ],
@@ -296,22 +295,6 @@ class _ExportState extends State<Export> {
                         ? ""
                         : allProduct_price.toString()),
                   ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.all(10.0),
-                height: 150,
-                width: 400,
-                decoration: const BoxDecoration(
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.blueGrey,
-                      offset: Offset(0.0, 0.0),
-                      blurRadius: 3.0,
-                    ),
-                  ],
-                  color: Colors.white,
-                  borderRadius: BorderRadius.all(Radius.circular(0.0)),
                 ),
               ),
             ],

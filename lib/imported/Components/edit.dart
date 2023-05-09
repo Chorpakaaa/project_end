@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:inventoryapp/imported/Class/subproduct.dart';
-import 'package:inventoryapp/imported/Components/barcode.dart';
 import 'package:inventoryapp/imported/imported.dart';
 import 'dart:math';
 import 'package:flutter/services.dart';
@@ -12,7 +11,8 @@ import 'package:inventoryapp/db/my_project.dart';
 import 'package:inventoryapp/provider/provider.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:dio/dio.dart';
+// import 'package:dio/dio.dart';
+import 'package:cloudinary/cloudinary.dart';
 
 class Edit extends StatefulWidget {
   final String? productId;
@@ -24,9 +24,13 @@ class Edit extends StatefulWidget {
 
 class _Edit extends State<Edit> {
   final picker = ImagePicker();
-  final dio = Dio();
+  final cloudinary = Cloudinary.signedConfig(
+    apiKey: "511693798369728",
+    apiSecret: "3k1s6MVKEzrK20Y7ghWKE9Gsgqo",
+    cloudName: "dvkhkj7jo",
+  );
   XFile? image;
-  String images = "";
+  String imagesdb = "";
   String? base64Image;
   bool? checkImage = false;
   List listProducts = [
@@ -73,7 +77,7 @@ class _Edit extends State<Edit> {
       _productDetailController.text = value['product_detail'];
       setState(() {
         codeUpdate = value['product_code'];
-        images = value['product_image'];
+        imagesdb = value['product_image'];
       });
     });
     final quertSubproduct = await db
@@ -101,54 +105,54 @@ class _Edit extends State<Edit> {
   _updateChangeProduct() async {
     if (widget.productId != null) {
       _loading();
-      String image_url = "";
-      if(base64Image != null && image != null){
-      final response = await dio.post(
-          'https://adaptive-testing-api.vercel.app/image/img/android',
-          data: jsonEncode({"image": base64Image, "key": "hiwkao"}));
+      String imageUrl = "";
+      if (base64Image != null && image != null) {
+        final response = await cloudinary.upload(
+            fileBytes: File(image!.path).readAsBytesSync(),
+            progressCallback: (count, total) {
+              print('Uploading image from file with progress: $count/$total');
+            });
+        if (response.isSuccessful) {
           setState(() {
-            image_url = response.data['url'];
+            imageUrl = response.secureUrl!;
           });
+        }
       }
-        final dataProduct = <String, dynamic>{
-          "product_name": _productNameController.text,
-          "product_detail": _productDetailController.text,
-          "product_image": image_url == "" ? images : image_url
-        };
-        await db
-            .collection('products')
-            .doc(widget.productId)
-            .update(dataProduct);
-        for (final data in listProducts) {
-          if (data['sub_product_id'] != null) {
-            final updateSubproduct = <String, dynamic>{
-              "sub_product_cost": data['cost'],
-              "sub_product_name": data['name'],
-              "sub_product_price": data['price'],
-              "sub_product_quantity": data['quantity']
-            };
-            await db
-                .collection('sub_products')
-                .doc(data['sub_product_id'])
-                .update(updateSubproduct);
-          }
-          if (data['sub_product_id'] == null) {
-            final addSubproduct = <String, dynamic>{
-              "sub_product_cost": data['cost'],
-              "sub_product_name": data['name'],
-              "sub_product_price": data['price'],
-              "sub_product_quantity": data['quantity'],
-              "product_id": widget.productId
-            };
-            await db.collection('sub_products').add(addSubproduct);
-          }
+      final dataProduct = <String, dynamic>{
+        "product_name": _productNameController.text,
+        "product_detail": _productDetailController.text,
+        "product_image": imageUrl == "" ? imagesdb : imageUrl
+      };
+      await db.collection('products').doc(widget.productId).update(dataProduct);
+      for (final data in listProducts) {
+        if (data['sub_product_id'] != null) {
+          final updateSubproduct = <String, dynamic>{
+            "sub_product_cost": data['cost'],
+            "sub_product_name": data['name'],
+            "sub_product_price": data['price'],
+            "sub_product_quantity": data['quantity']
+          };
+          await db
+              .collection('sub_products')
+              .doc(data['sub_product_id'])
+              .update(updateSubproduct);
         }
-        if (listDelete.length > 0) {
-          for (final data in listDelete) {
-            await db.collection('sub_products').doc(data).delete();
-          }
+        if (data['sub_product_id'] == null) {
+          final addSubproduct = <String, dynamic>{
+            "sub_product_cost": data['cost'],
+            "sub_product_name": data['name'],
+            "sub_product_price": data['price'],
+            "sub_product_quantity": data['quantity'],
+            "product_id": widget.productId
+          };
+          await db.collection('sub_products').add(addSubproduct);
         }
-      
+      }
+      if (listDelete.length > 0) {
+        for (final data in listDelete) {
+          await db.collection('sub_products').doc(data).delete();
+        }
+      }
 
       return true;
     }
@@ -178,22 +182,25 @@ class _Edit extends State<Edit> {
     final user = context.read<UserProvider>().user;
     final storeId = user != null ? user.storeId : null;
     _createProducts(String name, String detail) async {
-      dio.options.headers["content-Type"] = 'application/json';
       String noImage =
           'https://res.cloudinary.com/dvkhkj7jo/image/upload/v1681409220/3674270-200_m6r8be.png';
       _loading();
-      String image_url = '';
+      String imageUrl = '';
       if (base64Image != null && image != null) {
-        final response = await dio.post(
-            'https://adaptive-testing-api.vercel.app/image/img/android',
-            data: jsonEncode({"image": base64Image, "key": "hiwkao"}));
-        setState(() {
-          image_url = response.data['url'];
-        });
+        final response = await cloudinary.upload(
+            fileBytes: File(image!.path).readAsBytesSync(),
+            progressCallback: (count, total) {
+              print('Uploading image from file with progress: $count/$total');
+            });
+        if (response.isSuccessful) {
+          setState(() {
+            imageUrl = response.secureUrl!;
+          });
+        }
       }
       final data = <String, dynamic>{
         "product_name": name,
-        "product_image": image_url == "" ? noImage : image_url,
+        "product_image": imageUrl == "" ? noImage : imageUrl,
         "store_id": storeId,
         "product_code": randomString,
         "product_detail": detail
@@ -225,18 +232,20 @@ class _Edit extends State<Edit> {
               onPressed: () async {
                 if (widget.productId != null) {
                   if (await _updateChangeProduct()) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const Imported()),
-                    );
+                    Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const Imported()),
+                        (route) => false);
                   }
                 } else {
                   if (await _createProducts(_productNameController.text,
                       _productDetailController.text)) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const Imported()),
-                    );
+                    Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const Imported()),
+                        (route) => false);
                   }
                 }
               },
@@ -251,69 +260,50 @@ class _Edit extends State<Edit> {
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-            if (images != "" && image == null)
-              Center(
-                  child: FittedBox(
-                      child: Image.network(
-                images.toString(),
-                height: 200,
-                width: 200,
-                fit: BoxFit.fill,
-              ))),
-            if (image != null)
-              Center(
-                child: Container(
+            if (imagesdb != "" && image == null)
+              Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: Center(
+                    child: FittedBox(
+                        child: Image.network(
+                  imagesdb.toString(),
                   height: 200,
                   width: 200,
-                  child: Image.file(File(image!.path)),
+                  fit: BoxFit.fill,
+                ))),
+              ),
+            if (image != null)
+              Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: Center(
+                  child: Container(
+                    height: 200,
+                    width: 200,
+                    child: Image.file(File(image!.path)),
+                  ),
                 ),
               ),
             Container(
                 alignment: Alignment.topCenter,
-                child: ElevatedButton(
-                  onPressed: () => {_convertBase64()},
-                  style: ButtonStyle(
-                    padding: MaterialStateProperty.all(
-                      const EdgeInsets.all(8.0),
+                child: Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child: ElevatedButton(
+                    onPressed: () => {_convertBase64()},
+                    style: ButtonStyle(
+                      padding: MaterialStateProperty.all(
+                        const EdgeInsets.all(8.0),
+                      ),
+                    ),
+                    child: const Text(
+                      'เลือกรูปสินค้า',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 14.0,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                  child: const Text(
-                    'เลือกรูปสินค้า',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14.0,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                )
-                // Image(
-                //   image: AssetImage(
-                //       image == '' ? 'assets/images/folder.png' : image),
-                //   height: 200,
-                //   width: 400,
-                // )
-                ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Column(
-                  children: [
-                    IconButton(
-                        icon: const Icon(
-                          Icons.crop_free_sharp,
-                        ),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const Barcode()),
-                          );
-                        }),
-                    const Text('บาร์โค๊ดสินค้า')
-                  ],
-                ),
-              ],
-            ),
+                )),
             Padding(
                 padding: const EdgeInsets.only(top: 30),
                 child: TextField(

@@ -230,27 +230,10 @@ class _OrderdetailState extends State<Orderdetail> {
                   ],
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.all(10.0),
-                height: 150,
-                width: 400,
-                decoration: const BoxDecoration(
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.blueGrey,
-                      offset: Offset(0.0, 0.0),
-                      blurRadius: 3.0,
-                    ),
-                  ],
-                  color: Colors.white,
-                  borderRadius: BorderRadius.all(Radius.circular(0.0)),
-                ),
-              ),
             ],
           ),
         ),
       ),
-      // bottomNavigationBar: BottomNavbar(number: 0),
     );
   }
 }

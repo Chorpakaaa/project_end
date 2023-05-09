@@ -51,7 +51,8 @@ class _RegisterState extends State<Register> {
       }
     final store = <String, dynamic>{
       "store_name": email,
-      "store_code": _generateRandomString(8)
+      "store_code": _generateRandomString(8),
+      "store_image":"https://res.cloudinary.com/dvkhkj7jo/image/upload/v1681454532/329212297_858539315257889_978936199998912137_n_l52won.jpg"
     };
     db.collection("stores").add(store).then((value) {
       final user = <String, dynamic>{

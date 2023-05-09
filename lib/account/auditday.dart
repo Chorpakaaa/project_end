@@ -36,6 +36,7 @@ class AuditdayState extends State<Auditday> {
   int otherExpenses = 0;
   int lengthSale = 0;
   List arr = [];
+
   @override
   void initState() {
     super.initState();
@@ -215,7 +216,9 @@ class AuditdayState extends State<Auditday> {
       length: 2,
       child: Scaffold(
           appBar: AppBar(
-            title: const Text('รายการ/รับ-จ่าย'),
+            centerTitle: true,
+            title:
+                const Text('รายการ/รับ-จ่าย', style: TextStyle(fontSize: 20)),
           ),
           body: SingleChildScrollView(
             child: Column(
@@ -246,7 +249,7 @@ class AuditdayState extends State<Auditday> {
                 Column(
                   children: [
                     Padding(
-                      padding: const EdgeInsets.all(16.0),
+                      padding: const EdgeInsets.all(5.0),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: <Widget>[
@@ -258,7 +261,7 @@ class AuditdayState extends State<Auditday> {
                               },
                               child: const Text('รายรับ/จ่าย-วัน'),
                               style: ElevatedButton.styleFrom(
-                                  minimumSize: const Size(150, 45),
+                                  minimumSize: const Size(150, 40),
                                   textStyle: const TextStyle(fontSize: 15),
                                   shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(2)))),
@@ -275,7 +278,7 @@ class AuditdayState extends State<Auditday> {
                               },
                               child: const Text('ยอดขาย'),
                               style: ElevatedButton.styleFrom(
-                                  minimumSize: const Size(150, 45),
+                                  minimumSize: const Size(150, 40),
                                   textStyle: const TextStyle(fontSize: 15),
                                   shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(2)))),
@@ -292,10 +295,10 @@ class AuditdayState extends State<Auditday> {
                             children: <Widget>[
                               ElevatedButton(
                                 onPressed: () => _selectDate(context),
-                                child: const Text(
-                                    'รายการย้อนหลังจากวันที่ : ปัจจุบัน'),
+                                child:
+                                    const Text('เลือกรายการย้อนหลังจากวันที่'),
                                 style: ElevatedButton.styleFrom(
-                                    minimumSize: const Size(15, 12),
+                                    minimumSize: const Size(20, 20),
                                     textStyle: const TextStyle(fontSize: 15),
                                     shape: RoundedRectangleBorder(
                                         borderRadius:
@@ -306,10 +309,9 @@ class AuditdayState extends State<Auditday> {
                           Column(
                               children: arr
                                   .map((i) => Padding(
-                                        padding: const EdgeInsets.all(10.0),
+                                        padding: const EdgeInsets.all(8.0),
                                         child: Container(
-                                          margin:
-                                              const EdgeInsets.only(top: 20),
+                                          margin: const EdgeInsets.only(top: 5),
                                           decoration: BoxDecoration(
                                               borderRadius:
                                                   BorderRadius.circular(15),
@@ -343,7 +345,13 @@ class AuditdayState extends State<Auditday> {
                                               ),
                                               Row(
                                                 children: [
-                                                  const SizedBox(height: 30),
+                                                  Padding(
+                                                    padding:
+                                                        const EdgeInsets.only(
+                                                            left: 5),
+                                                    child: const SizedBox(
+                                                        height: 30),
+                                                  ),
                                                   OutlinedButton(
                                                     style: OutlinedButton
                                                         .styleFrom(
@@ -363,16 +371,21 @@ class AuditdayState extends State<Auditday> {
                                                       _generatePdfIn(i);
                                                     },
                                                     child: const Text(
-                                                        'Export PDF'), //ไฟล์ pdf
+                                                        'Export PDF'),
                                                   ),
                                                   const Spacer(),
                                                   const Text('รายรับ',
                                                       style: TextStyle(
                                                           fontSize: 14)),
                                                   const Spacer(),
-                                                  const Text('รายจ่าย',
-                                                      style: TextStyle(
-                                                          fontSize: 14)),
+                                                  Padding(
+                                                    padding:
+                                                        const EdgeInsets.only(
+                                                            right: 20),
+                                                    child: const Text('รายจ่าย',
+                                                        style: TextStyle(
+                                                            fontSize: 14)),
+                                                  ),
                                                 ],
                                               ),
                                               const Divider(
@@ -401,7 +414,7 @@ class AuditdayState extends State<Auditday> {
                                                                             10),
                                                                     alignment:
                                                                         Alignment
-                                                                            .topLeft,
+                                                                            .topCenter,
                                                                     height: 35,
                                                                     width: 60,
                                                                     margin:
@@ -414,34 +427,44 @@ class AuditdayState extends State<Auditday> {
                                                                         : Colors
                                                                             .green[300],
                                                                     child: Text(
-                                                                        iSub[
-                                                                            'status'],
+                                                                      iSub[
+                                                                          'status'],
+                                                                      style: const TextStyle(
+                                                                          fontSize:
+                                                                              12),
+                                                                    ),
+                                                                  ),
+                                                                  Padding(
+                                                                    padding: const EdgeInsets
+                                                                            .only(
+                                                                        left:
+                                                                            85.0),
+                                                                    child: Text(
+                                                                        iSub['status'] ==
+                                                                                "ขาย"
+                                                                            ? (iSub['total'])
+                                                                                .toString()
+                                                                            : '',
                                                                         style: const TextStyle(
                                                                             fontSize:
-                                                                                12),
-                                                                        textAlign:
-                                                                            TextAlign.center),
+                                                                                14)),
                                                                   ),
                                                                   const Spacer(),
-                                                                  Text(
-                                                                      iSub['status'] ==
-                                                                              "ขาย"
-                                                                          ? (iSub['total'])
-                                                                              .toString()
-                                                                          : '',
-                                                                      style: const TextStyle(
-                                                                          fontSize:
-                                                                              14)),
-                                                                  const Spacer(),
-                                                                  Text(
-                                                                      iSub['status'] ==
-                                                                              "ซื้อ"
-                                                                          ? (iSub['total'])
-                                                                              .toString()
-                                                                          : '',
-                                                                      style: const TextStyle(
-                                                                          fontSize:
-                                                                              14)),
+                                                                  Padding(
+                                                                    padding: const EdgeInsets
+                                                                            .only(
+                                                                        right:
+                                                                            25.0),
+                                                                    child: Text(
+                                                                        iSub['status'] ==
+                                                                                "ซื้อ"
+                                                                            ? (iSub['total'])
+                                                                                .toString()
+                                                                            : '',
+                                                                        style: const TextStyle(
+                                                                            fontSize:
+                                                                                14)),
+                                                                  ),
                                                                 ],
                                                               ),
                                                             ))
@@ -449,20 +472,23 @@ class AuditdayState extends State<Auditday> {
                                               ),
                                               Row(
                                                 children: [
+                                                  const SizedBox(
+                                                    width: 125,
+                                                    height: 50,
+                                                  ),
                                                   const Spacer(),
-                                                  Container(
+                                                  Padding(
                                                     padding:
-                                                        const EdgeInsets.all(
-                                                            10),
-                                                    alignment:
-                                                        Alignment.topLeft,
-                                                    height: 35,
-                                                    width: 100,
-                                                    margin:
-                                                        const EdgeInsets.all(
-                                                            10),
-                                                    color: Colors.green[300],
-                                                    child: Text(
+                                                        const EdgeInsets.only(
+                                                            top: 10.0,
+                                                            bottom: 10.0),
+                                                    child: Container(
+                                                      alignment:
+                                                          Alignment.center,
+                                                      height: 35,
+                                                      width: 100,
+                                                      color: Colors.green[300],
+                                                      child: Text(
                                                         totalSale.toString() ==
                                                                 "0"
                                                             ? "0"
@@ -470,21 +496,14 @@ class AuditdayState extends State<Auditday> {
                                                                 .toString(),
                                                         style: const TextStyle(
                                                             fontSize: 12),
-                                                        textAlign:
-                                                            TextAlign.center),
+                                                      ),
+                                                    ),
                                                   ),
                                                   const Spacer(),
                                                   Container(
-                                                    padding:
-                                                        const EdgeInsets.all(
-                                                            10),
-                                                    alignment:
-                                                        Alignment.topLeft,
+                                                    alignment: Alignment.center,
                                                     height: 35,
                                                     width: 100,
-                                                    margin:
-                                                        const EdgeInsets.all(
-                                                            10),
                                                     color: Colors.red[300],
                                                     child: Text(
                                                         totalBuy.toString() ==
@@ -493,9 +512,7 @@ class AuditdayState extends State<Auditday> {
                                                             : totalBuy
                                                                 .toString(),
                                                         style: const TextStyle(
-                                                            fontSize: 12),
-                                                        textAlign:
-                                                            TextAlign.center),
+                                                            fontSize: 12)),
                                                   ),
                                                   const Spacer()
                                                 ],
@@ -579,19 +596,33 @@ class AuditdayState extends State<Auditday> {
                                                               5),
                                                       child: Row(
                                                         children: <Widget>[
-                                                          const Text(
-                                                              'กำไรสุทธิ',
-                                                              style: TextStyle(
-                                                                  fontSize:
-                                                                      14)),
+                                                          Padding(
+                                                            padding:
+                                                                const EdgeInsets
+                                                                        .only(
+                                                                    bottom:
+                                                                        10.0),
+                                                            child: const Text(
+                                                                'กำไรสุทธิ',
+                                                                style: TextStyle(
+                                                                    fontSize:
+                                                                        14)),
+                                                          ),
                                                           const Spacer(),
-                                                          Text(
-                                                              totalProfit
-                                                                  .toString(),
-                                                              style:
-                                                                  const TextStyle(
-                                                                      fontSize:
-                                                                          14)),
+                                                          Padding(
+                                                            padding:
+                                                                const EdgeInsets
+                                                                        .only(
+                                                                    bottom:
+                                                                        10.0),
+                                                            child: Text(
+                                                                totalProfit
+                                                                    .toString(),
+                                                                style:
+                                                                    const TextStyle(
+                                                                        fontSize:
+                                                                            14)),
+                                                          ),
                                                         ],
                                                       ),
                                                     ),
@@ -635,7 +666,7 @@ class AuditdayState extends State<Auditday> {
     String formattedDateTime =
         DateFormat('dd/MM/yyyy HH:mm').format(DateTime.now());
     String formattedDate = DateFormat('dd/MM/yy').format(DateTime.now());
-    final font = await PdfGoogleFonts.k2DThin();
+    final font = await PdfGoogleFonts.k2DRegular();
     pdf.addPage(pw.Page(
       pageFormat: PdfPageFormat.a4,
       build: (context) {
@@ -643,10 +674,12 @@ class AuditdayState extends State<Auditday> {
           pw.Align(
               alignment: pw.Alignment.centerRight,
               child: pw.Text('Export Date ' + formattedDateTime)),
+                  pw.SizedBox(height: 15),
           pw.Align(
               alignment: pw.Alignment.center,
               child: pw.Text('รายรับรายจ่าย วันที่ ' + formattedDate,
                   style: pw.TextStyle(font: font, fontSize: 18))),
+                  pw.SizedBox(height: 15),
           pw.Table(children: [
             pw.TableRow(children: [
               pw.SizedBox(

@@ -168,7 +168,7 @@ class _MyWidgetState extends State<Imported> {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        title: const Text('เพิ่ม/ซื้อสินค้าเข้า'),
+        title: const Text('ซื้อสินค้าเข้า',style: TextStyle(fontSize: 20)),
         actions: <Widget>[
           Center(
             child: Text(
@@ -199,7 +199,7 @@ class _MyWidgetState extends State<Imported> {
                     context: context,
                     builder: (BuildContext context) {
                       return AlertDialog(
-                        title: const Text('ไม่มีสินค้าในรายการที่ถูกเลือก'),
+                        title: const Text('ไม่มีสินค้าในรายการที่เลือก'),
                         content: const Text('กรุณาเลือกสินค้าและระบุจำนวน'),
                         actions: <Widget>[
                           TextButton(
@@ -282,16 +282,16 @@ class _MyWidgetState extends State<Imported> {
                                             child: Text(
                                               data['product_name'],
                                               style: const TextStyle(
-                                                  fontSize: 20,
-                                                  fontWeight: FontWeight.w400),
+                                                  fontSize: 16,
+                                                  fontWeight:FontWeight.bold),
                                             ),
                                           ),
                                           Center(
                                               child: FittedBox(
                                                   child: Image.network(
                                             data['product_image'],
-                                            height: 90,
-                                            width: 90,
+                                            height: 120,
+                                            width: 120,
                                             fit: BoxFit.fill,
                                           )))
                                         ],
@@ -323,20 +323,6 @@ class _MyWidgetState extends State<Imported> {
       ),
       floatingActionButton:
           Column(mainAxisAlignment: MainAxisAlignment.end, children: [
-        Padding(
-          padding: const EdgeInsets.only(bottom: 10),
-          child: FloatingActionButton(
-            onPressed: () => {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const Imported()), //ต้องไปกล้องถ่ายQr
-              )
-            },
-            heroTag: "fit_screen_sharp",
-            child: const Icon(Icons.fit_screen_sharp),
-          ),
-        ),
         FloatingActionButton(
           onPressed: () {
             Navigator.push(

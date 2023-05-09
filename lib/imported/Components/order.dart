@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:inventoryapp/db/store.dart';
-import 'package:inventoryapp/imported/Components/barcode.dart';
 import 'package:inventoryapp/imported/Components/odering.dart';
 import 'package:inventoryapp/imported/imported.dart';
 import 'edit.dart';
@@ -122,14 +121,17 @@ class _OrderState extends State<OrderProduct> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Center(
-                      child: FittedBox(
-                          child: Image.network(
-                    prouduct['product_image'],
-                    height: 200,
-                    width: 200,
-                    fit: BoxFit.fill,
-                  ))),
+                  Padding(
+                    padding: const EdgeInsets.all(10.0),
+                    child: Center(
+                        child: FittedBox(
+                            child: Image.network(
+                      prouduct['product_image'],
+                      height: 200,
+                      width: 200,
+                      fit: BoxFit.fill,
+                    ))),
+                  ),
                   Container(
                       alignment: Alignment.topCenter,
                       child: Row(
@@ -150,23 +152,6 @@ class _OrderState extends State<OrderProduct> {
                                     );
                                   }),
                               const Text('แก้ไขสินค้า')
-                            ],
-                          ),
-                          Column(
-                            children: [
-                              IconButton(
-                                  icon: const Icon(
-                                    Icons.crop_free_sharp,
-                                  ),
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (context) =>
-                                              const Barcode()),
-                                    );
-                                  }),
-                              const Text('บาร์โค้ดสินค้า')
                             ],
                           ),
                         ],
@@ -207,7 +192,6 @@ class _OrderState extends State<OrderProduct> {
                     children: List.generate(
                       sub_list.length,
                       (index) => Container(
-                        height: 140,
                         width: 400,
                         decoration: const BoxDecoration(
                           boxShadow: [

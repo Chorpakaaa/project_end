@@ -167,12 +167,12 @@ class _MyWidgetState extends State<Sell> {
     return Scaffold(
         appBar: AppBar(
           centerTitle: true,
-          title: const Text('ขายสินค้าออก'),
+          title: const Text('ขายสินค้าออก',style: TextStyle(fontSize: 20)),
           actions: <Widget>[
             Center(
               child: Text(
                 newQuantity.toString() == "0" ? "" : newQuantity.toString(),
-                style: TextStyle(fontSize: 22),
+                style: TextStyle(fontSize: 22)
               ),
             ),
             IconButton(
@@ -277,16 +277,19 @@ class _MyWidgetState extends State<Sell> {
                                         Container(
                                           margin: const EdgeInsets.only(
                                               left: 10.0,
-                                              bottom: 20.0,
+                                              bottom: 5.0,
                                               top: 5.0),
-                                          child: Text(i['product_name']),
+                                          child: Text(i['product_name'],
+                                          style: const TextStyle(
+                                              fontSize: 16,
+                                              fontWeight:FontWeight.bold)),
                                         ),
                                         Center(
                                             child: FittedBox(
                                                 child: Image.network(
                                           i['product_image'],
-                                          height: 90,
-                                          width: 90,
+                                          height: 120,
+                                          width: 120,
                                           fit: BoxFit.fill,
                                         )))
                                       ],
@@ -315,24 +318,6 @@ class _MyWidgetState extends State<Sell> {
             ],
           ),
         ),
-        floatingActionButton:
-            Column(mainAxisAlignment: MainAxisAlignment.end, children: [
-          Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: FloatingActionButton(
-              onPressed: () => {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) =>
-                          const Imported()), //ต้องไปกล้องถ่ายQr
-                )
-              },
-              heroTag: "fit_screen_sharp",
-              child: const Icon(Icons.fit_screen_sharp),
-            ),
-          ),
-        ]),
         bottomNavigationBar: BottomNavbar(
           number: 1,
           role: role,

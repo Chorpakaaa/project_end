@@ -1,10 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:inventoryapp/login/login.dart';
-import 'package:inventoryapp/other/Components/Changepassword.dart';
 import 'package:inventoryapp/other/Components/managerole.dart';
 import 'package:inventoryapp/other/Components/shopsettings.dart';
-import 'package:inventoryapp/other/Components/swichaccount.dart';
 import 'package:inventoryapp/provider/provider.dart';
 import 'package:inventoryapp/widget/nevbar.dart';
 import 'package:provider/provider.dart';
@@ -20,17 +18,20 @@ class _Other extends State<Other> {
   final _formKey = GlobalKey<FormState>();
   final db = FirebaseFirestore.instance;
   String nameStore = '';
+  String imageUrl = "";
   @override
   void initState() {
     super.initState();
     _fecthShop();
   }
 
+
   _fecthShop() async {
     final user = context.read<UserProvider>().user;
     await db.collection('stores').doc(user!.storeId).get().then((value) {
       setState(() {
         nameStore = value['store_name'];
+        imageUrl = value['store_image'];
       });
     });
   }
@@ -51,30 +52,32 @@ class _Other extends State<Other> {
         appBar: AppBar(
           centerTitle: true,
           title: const Text(
-            'อื่นๆ',
-            style: TextStyle(fontSize: 16),
+            'อื่นๆ',style: TextStyle(fontSize: 20),
           ),
           backgroundColor: Colors.deepOrange,
         ),
 
-        // สลับบัญชี
         body: Padding(
           padding: const EdgeInsets.all(15),
           child: Column(
             children: [
+              if(imageUrl != "")
               Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: const Image(
-                  image: AssetImage('assets/images/wh2.jpg'),
-                  height: 150,
-                  width: 200,
+                  padding: const EdgeInsets.all(15.0),
+                  child: Center(
+                      child: FittedBox(
+                          child: Image.network(
+                    imageUrl.toString(),
+                    height: 200,
+                    width: 200,
+                    fit: BoxFit.fill,
+                  ))),
                 ),
-              ),
               Center(
-                child: Text('ชื่อร้าน ' + nameStore),
+                child: Text('ชื่อร้านค้า ' + nameStore,style: const TextStyle(fontSize: 16,fontWeight:FontWeight.bold)),
               ),
-              SizedBox(
-                height: 20,
+              const SizedBox(
+                height: 15,
               ),
               user!.role == "เจ้าของร้าน"
                   ? Column(
@@ -95,12 +98,12 @@ class _Other extends State<Other> {
                             children: const <Widget>[
                               Text(
                                 'ตั้งค่ารายละเอียดร้านค้า',
-                                style: TextStyle(color: Colors.white),
+                                style: TextStyle(fontSize: 16,color: Colors.white),
                               ),
                             ],
                           ),
                         ),
-                        Divider(
+                        const Divider(
                           thickness: 2,
                         ),
                         ElevatedButton(
@@ -119,12 +122,12 @@ class _Other extends State<Other> {
                             children: const <Widget>[
                               Text(
                                 'จัดการบทบาทและผู้ช่วย/ผู้ใช้อื่น',
-                                style: TextStyle(color: Colors.white),
+                                style: TextStyle(fontSize: 16,color: Colors.white),
                               ),
                             ],
                           ),
                         ),
-                        Divider(
+                        const Divider(
                           thickness: 2,
                         ),
                       ],
@@ -164,7 +167,7 @@ class _Other extends State<Other> {
                   children: const <Widget>[
                     Text(
                       'ออกจากระบบ',
-                      style: TextStyle(color: Colors.white),
+                      style: TextStyle(fontSize: 16,color: Colors.white),
                     ),
                   ],
                 ),

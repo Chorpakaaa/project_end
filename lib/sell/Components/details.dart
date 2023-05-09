@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:inventoryapp/sell/Components/barcodesell.dart';
 import 'package:inventoryapp/sell/Components/export.dart';
 import 'package:inventoryapp/sell/sell.dart';
 import 'package:flutter/services.dart';
@@ -136,38 +135,17 @@ class _DetailsState extends State<Details> {
           ],
         ),
         body: ListView(children: [
-         Center(
-                  child: FittedBox(
-                      child: Image.network(
-                  prouduct['product_image'].toString(),
-                  height: 200,
-                  width: 200,
-                  fit: BoxFit.fill,
-                ))),
-              
-          Container(
-              alignment: Alignment.topCenter,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  Column(
-                    children: [
-                      IconButton(
-                          icon: const Icon(
-                            Icons.crop_free_sharp,
-                          ),
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => const BarcodeSell()),
-                            );
-                          }),
-                      const Text('บาร์โค๊ดสินค้า')
-                    ],
-                  ),
-                ],
-              )),
+         Padding(
+           padding: const EdgeInsets.all(10.0),
+           child: Center(
+                    child: FittedBox(
+                        child: Image.network(
+                    prouduct['product_image'].toString(),
+                    height: 200,
+                    width: 200,
+                    fit: BoxFit.fill,
+                  ))),
+         ),
           Padding(
               padding: EdgeInsets.only(top: 30),
               child: TextField(

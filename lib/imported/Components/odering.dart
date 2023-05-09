@@ -2,7 +2,6 @@ import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:inventoryapp/imported/Components/ordersuccess.dart';
 import 'package:inventoryapp/imported/imported.dart';
 import 'package:inventoryapp/provider/provider.dart';
 import 'package:inventoryapp/widget/nevbar.dart';
@@ -68,7 +67,6 @@ class _OderingState extends State<Odering> {
     }
     @override
     final user = context.read<UserProvider>().user;
-    print(user!.transacId);
     final orderSend = <String, dynamic>{
       "status": "ซื้อ",
       "date_time": formattedDate,
@@ -140,11 +138,11 @@ class _OderingState extends State<Odering> {
                             ),
                             child: const Text('ตกลง'),
                             onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => const Imported()),
-                              );
+                              Navigator.pushAndRemoveUntil(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => const Imported()),
+                                  (route) => false);
                             },
                           ),
                         ],
@@ -168,8 +166,7 @@ class _OderingState extends State<Odering> {
                   children: <Widget>[
                     const Text("เวลาทำรายการ", style: TextStyle(fontSize: 18)),
                     Spacer(),
-                    Text(formattedDate,
-                        style: TextStyle(fontSize: 18)), //ทำให้เป็นวันที่จริงๆ
+                    Text(formattedDate, style: TextStyle(fontSize: 18)),
                   ],
                 ),
               ),
@@ -293,28 +290,12 @@ class _OderingState extends State<Odering> {
                 alignment: Alignment.center,
                 child: Row(
                   children: <Widget>[
-                    const Text("ราคารวมทั้งสิ้น"),
+                    const Text("ราคารวมทั้งหมด"),
                     const Spacer(),
                     Text(allProduct_cost.toString() == "0"
                         ? ""
                         : allProduct_cost.toString()),
                   ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.all(10.0),
-                height: 150,
-                width: 400,
-                decoration: const BoxDecoration(
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.blueGrey,
-                      offset: Offset(0.0, 0.0),
-                      blurRadius: 3.0,
-                    ),
-                  ],
-                  color: Colors.white,
-                  borderRadius: BorderRadius.all(Radius.circular(0.0)),
                 ),
               ),
             ],

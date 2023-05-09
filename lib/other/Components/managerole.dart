@@ -87,7 +87,7 @@ class _ManageRole extends State<ManageRole> {
         appBar: AppBar(
           centerTitle: true,
           title: const Text(
-            'บริหารจัดการผู้ช่วยใช้/ผู้ใช้อื่น',
+            'จัดการผู้ช่วยใช้/ผู้ใช้อื่น',
             style: TextStyle(fontSize: 16),
           ),
           actions: <Widget>[
@@ -111,22 +111,6 @@ class _ManageRole extends State<ManageRole> {
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 20.0),
-                TextField(
-                  decoration: InputDecoration(
-                      filled: true,
-                      fillColor: Color(333399),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8.0),
-                        borderSide: BorderSide.none,
-                      ),
-                      hintText: " ค้นหา ",
-                      prefixIcon: Icon(Icons.search),
-                      prefixIconColor: Colors.amberAccent),
-                ),
-                SizedBox(
-                  height: 20.0,
-                ),
                 Column(
                     children: listUser
                         .map((i) => InkWell(
@@ -137,18 +121,18 @@ class _ManageRole extends State<ManageRole> {
                               decoration: const BoxDecoration(
                                 border: Border(
                                     bottom: BorderSide(
-                                      color: Colors.black,
-                                      width: 0.5,
+                                      color: Colors.deepOrange,
+                                      width: 1.0,
                                     ),
                                     top: BorderSide(
-                                        color: Colors.black, width: 0.5)),
+                                        color: Colors.deepOrange, width: 0)),
                               ),
                               child: Padding(
                                 padding: const EdgeInsets.all(8.0),
                                 child: Row(
                                   children: [
-                                    Icon(Icons.person),
-                                    SizedBox(
+                                    const Icon(Icons.person_add_alt_rounded,color: Colors.deepOrange),
+                                    const SizedBox(
                                       width: 40,
                                     ),
                                     Column(
